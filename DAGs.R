@@ -27,11 +27,39 @@ colnames(coords) <- c("name","x","y")
 
 #Create DAG for EF -> t models
 # Initialize the DAG. "y ~ x" means that x is a parent of y (y <- x)
-m1 <- dagify(THI ~ EF,
-             EF ~ stress, EF ~ anxiety, EF ~ depression,
+m1 <- dagify(EF ~ THI,
+             labels =
+               c("EF" = "Executive \n function",
+                 "THI" = "Tinnitus \n severity"), 
+              latent = 
+               c("EF, THI"),
               exposure = "EF",
-              outcome = "THI",
-              coords=coords)
+              outcome = "THI") %>% 
+  tidy_dagitty()
+
+
 
 # Plot the DAG
-ggdag(m1)
+m1 %>% ggplot(aes(x = x, y = y, xend = xend, yend = yend)) +
+  geom_dag_edges() +
+  geom_dag_point() +
+  geom_dag_text() +
+  scale_adjusted() +
+  geom_dag_label_repel(aes(label = label, fill = label),
+                       col = "white", show.legend = FALSE) 
+
+ ggplot(aes(x = x, y = y, xend = xend, yend = yend)) +
+  geom_dag_node(
+    color = "black",
+    alpha = 0.8
+  ) +
+  geom_dag_label_repel(aes(label = label),
+                       col = "white",
+                       label.size = .4,
+                       fill = "#20a486ff",
+                       alpha = 0.8,
+                       show.legend = FALSE,
+                       nudge_x = .7,
+                       nudge_y = .3
+  ) +
+  theme_void()
