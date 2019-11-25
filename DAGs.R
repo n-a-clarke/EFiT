@@ -60,8 +60,9 @@ EF_t_m1 %>% ggplot(aes(x = x, y = y, xend = xend, yend = yend)) +
   geom_dag_point() +
   geom_dag_text() +
   scale_adjusted() +
-  geom_dag_label_repel(aes(label = label, fill = "black"),
-                       col = "white", show.legend = FALSE) +
+  geom_dag_label_repel(aes(label = label),
+                       nudge_y = -.1,
+                       nudge_x = .25) +
   theme_void()
   
 
