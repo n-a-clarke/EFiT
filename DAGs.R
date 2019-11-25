@@ -41,7 +41,7 @@ EF_t_m1 <- dagify(
                c("EF" = "Executive \n function",
                  "THI" = "Tinnitus \n severity",
                  "T" = "Perceiving \n tinnitus",
-                 "TD" = "Duration",
+                 "TD" = "Tinnitus \n Duration",
                  "C1" = "Age",
                  "C2" = "Hearing \n thresholds",
                  "C3" = "Depression",
@@ -52,19 +52,22 @@ EF_t_m1 <- dagify(
                  "C8" = "Cognitive \n reserve"), 
               exposure = "T",
               outcome = "THI") %>% 
-  tidy_dagitty()
+  tidy_dagitty(layout = "auto")
 
 
 # Plot the DAG
-m1 %>% ggplot(aes(x = x, y = y, xend = xend, yend = yend)) +
+EF_t_m1 %>% ggplot(aes(x = x, y = y, xend = xend, yend = yend)) +
   geom_dag_edges() +
   geom_dag_point() +
   geom_dag_text() +
   scale_adjusted() +
   geom_dag_label_repel(aes(label = label),
                        nudge_y = -.1,
-                       nudge_x = .25) +
+                       nudge_x = .25,
+                       alpha = .85) +
   theme_void()
-  
-#EF_t_m2 is the model above but with tinnitus onset causally affecting EF
+
+ggdag_adjustment_set(EF_t_m1, exposure = "EF", outcome = "THI") + 
+  theme_dag_blank()
+#EF_t_m2 is the model above but with tinnitus duration causally affecting EF
 
