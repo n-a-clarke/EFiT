@@ -194,7 +194,7 @@ dual_cd_control_modsev <- cohens_d(controls$dualTask_num, modsev_tin$dualTask_nu
 dual_cd_control_mild <- cohens_d(controls$dualTask_num, mild_tin$dualTask_num)#controls vs mild
 dual_cd_mild_modsev <- cohens_d(mild_tin$dualTask_num, modsev_tin$dualTask_num)#mild vs modsev
 
-#create vectors of cohens_d scores for 
+#create vectors of cohens_d scores for control vs modsev
 control_modsev_cd <- data.frame(
   c("Retrieval-induced forgetting", 
     "Number letter sequencing", 
@@ -213,12 +213,74 @@ control_modsev_cd <- data.frame(
     stroopERR_cd_control_modsev, 
     switchCostRT_cd_control_modsev,
     switchErr_cd_control_modsev, 
-    dual_cd_control_modsev)
+    dual_cd_control_modsev),
+  c(rep(1, 9))
   )
-colnames(control_modsev_cd) <- c("task", "cohens_d")
+colnames(control_modsev_cd) <- c("task", "cohens_d", "group")
+
+#create vectors of cohens_d scores for control vs mild
+control_mild_cd <- data.frame(
+  c("Retrieval-induced forgetting", 
+    "Number letter sequencing", 
+    "Keep track", 
+    "Matrix reasoning",
+    "Stroop-RT", 
+    "Stroop-errors", 
+    "Switch cost", 
+    "Switch errors", 
+    "Dual task"),
+  c(rif_cd_control_mild, 
+    nls_cd_control_mild, 
+    keep_cd_control_mild, 
+    matrix_cd_control_mild, 
+    stroopRT_cd_control_mild, 
+    stroopERR_cd_control_mild, 
+    switchCostRT_cd_control_mild,
+    switchErr_cd_control_mild, 
+    dual_cd_control_mild),
+  c(rep(2, 9))
+)
+colnames(control_mild_cd) <- c("task", "cohens_d", "group")
+
+#create vectors of cohens_d scores for control vs mild
+mild_modsev_cd <- data.frame(
+  c("Retrieval-induced forgetting", 
+    "Number letter sequencing", 
+    "Keep track", 
+    "Matrix reasoning",
+    "Stroop-RT", 
+    "Stroop-errors", 
+    "Switch cost", 
+    "Switch errors", 
+    "Dual task"),
+  c(rif_cd_mild_modsev, 
+    nls_cd_mild_modsev, 
+    keep_cd_mild_modsev, 
+    matrix_cd_mild_modsev, 
+    stroopRT_cd_mild_modsev, 
+    stroopERR_cd_mild_modsev, 
+    switchCostRT_cd_mild_modsev,
+    switchErr_cd_mild_modsev, 
+    dual_cd_mild_modsev),
+  c(rep(3, 9))
+)
+colnames(mild_modsev_cd) <- c("task", "cohens_d", "group")
+
+#join tables together
+all_cohens_d <- bind_rows(control_modsev_cd, control_mild_cd, mild_modsev_cd)
+#change minus signs to positives for plotting
+all_cohens_d <- all_cohens_d %>% arrange(cohens_d)#arrange for easier transform
+all_cohens_d[1:17,2] <- all_cohens_d[1:17,2]*-1
+#change group membership column to factor
+all_cohens_d[,3] <- as.factor(all_cohens_d[,3])
+
+control_modsev_control_mild_cd <- all_cohens_d %>% 
+  filter(group == 1 | group == 2)
+
 
 #plot of cohens_d for each task
-ggplot(control_modsev_cd, aes(x = cohens_d, y = task)) +
-  geom_point() +
-  xlim(c(-1,1)) +
-  geom_vline(xintercept = 0, linetype = "dotted")
+ggplot(control_modsev_control_mild_cd , aes(x = cohens_d, y = task, colour = group)) +
+  geom_point(position = "jitter",
+             shape = 15, size = 3) +
+  xlim(c(0,1))
+  
