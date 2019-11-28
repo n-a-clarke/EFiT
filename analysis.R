@@ -313,8 +313,8 @@ bayes_control_modsev %>%
   theme_modern()
 
 #bayesian ttest for rule switch error - control vs modsev
-control_mod_sev_switch_error_BF <- BayesFactor::ttestBF(formula = ruleErrors ~ THI_cat, data = bayes_control_modsev)
-describe_posterior(control_mod_sev_switch_error_BF)
+control_modsev_switch_error_BF <- BayesFactor::ttestBF(formula = ruleErrors ~ THI_cat, data = bayes_control_modsev)
+describe_posterior(control_modsev_switch_error_BF)
 
 #violin-dot plot to visualise distibution and sample size for stroop response time - control vs modsev
 bayes_control_modsev %>% 
@@ -323,9 +323,20 @@ bayes_control_modsev %>%
   scale_fill_material() +
   theme_modern()
 
-#bayesian ttest for rule switch task - control vs modsev
-control_mod_sev_stroop_rt_BF <- BayesFactor::ttestBF(formula = incongruent ~ THI_cat, data = bayes_control_modsev)
-describe_posterior(control_mod_sev_stroop_rt_BF)
+#bayesian ttest for stroop response time - control vs modsev
+control_modsev_stroop_rt_BF <- BayesFactor::ttestBF(formula = incongruent ~ THI_cat, data = bayes_control_modsev)
+describe_posterior(control_modsev_stroop_rt_BF)
+
+#violin-dot plot to visualise distibution and sample size for stroop error count - control vs modsev
+bayes_control_modsev %>% 
+  ggplot(aes(x = THI_cat, y = stroopErrors, fill = THI_cat)) +
+  geom_violindot(fill_dots = "black", size_dots = 1) +
+  scale_fill_material() +
+  theme_modern()
+
+#bayesian ttest for stroop error count - control vs modsev
+control_modsev_stroop_error_BF <- BayesFactor::ttestBF(formula = incongruent ~ THI_cat, data = bayes_control_modsev)
+describe_posterior(control_modsev_stroop_error_BF)
 
 #violin-dot plot to visualise distibution and sample size for number letter sequencing - control vs modsev
 bayes_control_modsev %>% 
@@ -335,8 +346,8 @@ bayes_control_modsev %>%
   theme_modern()
 
 #bayesian ttest for number letter sequencing - control vs modsev
-control_mod_sev_nls_BF <- BayesFactor::ttestBF(formula = numLetSeq ~ THI_cat, data = bayes_control_modsev)
-describe_posterior(control_mod_sev_nls_BF)
+control_modsev_nls_BF <- BayesFactor::ttestBF(formula = numLetSeq ~ THI_cat, data = bayes_control_modsev)
+describe_posterior(control_modsev_nls_BF)
 
 #violin-dot plot to visualise distibution and sample size for keep track task - control vs modsev
 bayes_control_modsev %>% 
@@ -345,7 +356,7 @@ bayes_control_modsev %>%
   scale_fill_material() +
   theme_modern()
 
-#bayesian ttest for number letter sequencing - control vs modsev
+#bayesian ttest for keep track task - control vs modsev
 control_modsev_keep_BF <- BayesFactor::ttestBF(formula = keepTrack ~ THI_cat, data = bayes_control_modsev)
 describe_posterior(control_modsev_keep_BF)
 
@@ -404,7 +415,7 @@ bayes_control_modsev %>%
 control_modsev_RRS_BF <- BayesFactor::ttestBF(formula = RRS ~ THI_cat, data = bayes_control_modsev)
 describe_posterior(control_modsev_RRS_BF)
 
-#violin-dot plot to visualise distibution and sample size for RRS - control vs modsev
+#violin-dot plot to visualise distibution and sample size for CRIq_aged - control vs modsev
 bayes_control_modsev %>% 
   ggplot(aes(x = THI_cat, y = CRIq_aged, fill = THI_cat)) +
   geom_violindot(fill_dots = "black", size_dots = 1) +
@@ -415,4 +426,205 @@ bayes_control_modsev %>%
 control_modsev_CRIq_aged_BF <- BayesFactor::ttestBF(formula = CRIq_aged ~ THI_cat, data = bayes_control_modsev)
 describe_posterior(control_modsev_CRIq_aged_BF)
 
+#violin-dot plot to visualise distibution and sample size for depression - control vs modsev
+bayes_control_modsev %>% 
+  ggplot(aes(x = THI_cat, y = DASS_D, fill = THI_cat)) +
+  geom_violindot(fill_dots = "black", size_dots = 1) +
+  scale_fill_material() +
+  theme_modern()
 
+#bayesian ttest for depression - control vs modsev
+control_modsev_depression_BF <- BayesFactor::ttestBF(formula = CRIq_aged ~ THI_cat, data = bayes_control_modsev)
+describe_posterior(control_modsev_depression_BF)
+
+#violin-dot plot to visualise distibution and sample size for anxiety - control vs modsev
+bayes_control_modsev %>% 
+  ggplot(aes(x = THI_cat, y = DASS_A, fill = THI_cat)) +
+  geom_violindot(fill_dots = "black", size_dots = 1) +
+  scale_fill_material() +
+  theme_modern()
+
+#bayesian ttest for anxiety - control vs modsev
+control_modsev_anxiety_BF <- BayesFactor::ttestBF(formula = DASS_A ~ THI_cat, data = bayes_control_modsev)
+describe_posterior(control_modsev_anxiety_BF)
+
+#violin-dot plot to visualise distibution and sample size for stress - control vs modsev
+bayes_control_modsev %>% 
+  ggplot(aes(x = THI_cat, y = DASS_S, fill = THI_cat)) +
+  geom_violindot(fill_dots = "black", size_dots = 1) +
+  scale_fill_material() +
+  theme_modern()
+
+#bayesian ttest for stress - control vs modsev
+control_modsev_stress_BF <- BayesFactor::ttestBF(formula = DASS_S ~ THI_cat, data = bayes_control_modsev)
+describe_posterior(control_modsev_stress_BF)
+###############################
+#Controls vs mild - drop modsev observations for bayesian t-test
+bayes_control_mild <- efit %>% 
+  filter(THI_cat != "modsev") %>% 
+  droplevels()
+
+#violin-dot plot to visualise distibution and sample size for rule switch cost - control vs mild
+bayes_control_mild %>% 
+  ggplot(aes(x = THI_cat, y = switchCost, fill = THI_cat)) +
+  geom_violindot(fill_dots = "black", size_dots = 1) +
+  scale_fill_material() +
+  theme_modern()
+
+#bayesian ttest for rule switch task - control vs mild
+control_mild_switch_cost_BF <- BayesFactor::ttestBF(formula = switchCost ~ THI_cat, data = bayes_control_mild)
+describe_posterior(control_mild_switch_cost_BF)
+
+#violin-dot plot to visualise distibution and sample size for rule switch error count - control vs mild
+bayes_control_mild %>% 
+  ggplot(aes(x = THI_cat, y = ruleErrors, fill = THI_cat)) +
+  geom_violindot(fill_dots = "black", size_dots = 1) +
+  scale_fill_material() +
+  theme_modern()
+
+#bayesian ttest for rule switch error - control vs mild
+control_mod_mild_switch_error_BF <- BayesFactor::ttestBF(formula = ruleErrors ~ THI_cat, data = bayes_control_mild)
+describe_posterior(control_mod_mild_switch_error_BF)
+
+#violin-dot plot to visualise distibution and sample size for stroop response time - control vs mild
+bayes_control_mild %>% 
+  ggplot(aes(x = THI_cat, y = incongruent, fill = THI_cat)) +
+  geom_violindot(fill_dots = "black", size_dots = 1) +
+  scale_fill_material() +
+  theme_modern()
+
+#bayesian ttest for stroop response time - control vs mild
+control_mild_stroop_rt_BF <- BayesFactor::ttestBF(formula = incongruent ~ THI_cat, data = bayes_control_mild)
+describe_posterior(control_mild_stroop_rt_BF)
+
+#violin-dot plot to visualise distibution and sample size for stroop error count - control vs mild
+bayes_control_mild %>% 
+  ggplot(aes(x = THI_cat, y = stroopErrors, fill = THI_cat)) +
+  geom_violindot(fill_dots = "black", size_dots = 1) +
+  scale_fill_material() +
+  theme_modern()
+
+#bayesian ttest for stroop error count - control vs mild
+control_mild_stroop_error_BF <- BayesFactor::ttestBF(formula = incongruent ~ THI_cat, data = bayes_control_mild)
+describe_posterior(control_mild_stroop_error_BF)
+
+#violin-dot plot to visualise distibution and sample size for number letter sequencing - control vs mild
+bayes_control_mild %>% 
+  ggplot(aes(x = THI_cat, y = numLetSeq, fill = THI_cat)) +
+  geom_violindot(fill_dots = "black", size_dots = 1) +
+  scale_fill_material() +
+  theme_modern()
+
+#bayesian ttest for number letter sequencing - control vs mild
+control_mild_nls_BF <- BayesFactor::ttestBF(formula = numLetSeq ~ THI_cat, data = bayes_control_mild)
+describe_posterior(control_mild_nls_BF)
+
+#violin-dot plot to visualise distibution and sample size for keep track task - control vs mild
+bayes_control_mild %>% 
+  ggplot(aes(x = THI_cat, y = keepTrack, fill = THI_cat)) +
+  geom_violindot(fill_dots = "black", size_dots = 1) +
+  scale_fill_material() +
+  theme_modern()
+
+#bayesian ttest for keep track task - control vs mild
+control_mild_keep_BF <- BayesFactor::ttestBF(formula = keepTrack ~ THI_cat, data = bayes_control_modsev)
+describe_posterior(control_mild_keep_BF)
+
+#violin-dot plot to visualise distibution and sample size for RIF - control vs mild
+bayes_control_mild %>% 
+  ggplot(aes(x = THI_cat, y = RIF_Diff, fill = THI_cat)) +
+  geom_violindot(fill_dots = "black", size_dots = 1) +
+  scale_fill_material() +
+  theme_modern()
+
+#bayesian ttest for RIF - control vs mild
+control_mild_RIF_BF <- BayesFactor::ttestBF(formula = RIF_Diff ~ THI_cat, data = bayes_control_mild)
+describe_posterior(control_mild_RIF_BF)
+
+#violin-dot plot to visualise distibution and sample size for matrix reasoning - control vs mild
+bayes_control_mild %>% 
+  ggplot(aes(x = THI_cat, y = matrixReason, fill = THI_cat)) +
+  geom_violindot(fill_dots = "black", size_dots = 1) +
+  scale_fill_material() +
+  theme_modern()
+
+#bayesian ttest for matrix reasoning - control vs mild
+control_mild_matrix_BF <- BayesFactor::ttestBF(formula = matrixReason ~ THI_cat, data = bayes_control_mild)
+describe_posterior(control_mild_matrix_BF)
+
+#violin-dot plot to visualise distibution and sample size for dual task - control vs mild
+bayes_control_mild %>% 
+  ggplot(aes(x = THI_cat, y = dualTask_num, fill = THI_cat)) +
+  geom_violindot(fill_dots = "black", size_dots = 1) +
+  scale_fill_material() +
+  theme_modern()
+
+#bayesian ttest for dual task - control vs mild
+control_mild_dual_BF <- BayesFactor::ttestBF(formula = dualTask_num ~ THI_cat, data = bayes_control_mild)
+describe_posterior(control_mild_dual_BF)
+
+#violin-dot plot to visualise distibution and sample size for CFQ- control vs mild
+bayes_control_mild %>% 
+  ggplot(aes(x = THI_cat, y = CFQ, fill = THI_cat)) +
+  geom_violindot(fill_dots = "black", size_dots = 1) +
+  scale_fill_material() +
+  theme_modern()
+
+#bayesian ttest for CFQ - control vs mild
+control_mild_CFQ_BF <- BayesFactor::ttestBF(formula = CFQ ~ THI_cat, data = bayes_control_mild)
+describe_posterior(control_mild_CFQ_BF)
+
+#violin-dot plot to visualise distibution and sample size for RRS- control vs mild
+bayes_control_mild %>% 
+  ggplot(aes(x = THI_cat, y = RRS, fill = THI_cat)) +
+  geom_violindot(fill_dots = "black", size_dots = 1) +
+  scale_fill_material() +
+  theme_modern()
+
+#bayesian ttest for RRS - control vs mild
+control_mild_RRS_BF <- BayesFactor::ttestBF(formula = RRS ~ THI_cat, data = bayes_control_mild)
+describe_posterior(control_mild_RRS_BF)
+
+#violin-dot plot to visualise distibution and sample size for CRIq_aged - control vs mild
+bayes_control_mild %>% 
+  ggplot(aes(x = THI_cat, y = CRIq_aged, fill = THI_cat)) +
+  geom_violindot(fill_dots = "black", size_dots = 1) +
+  scale_fill_material() +
+  theme_modern()
+
+#bayesian ttest for CRIq_aged - control vs mild
+control_mild_CRIq_aged_BF <- BayesFactor::ttestBF(formula = CRIq_aged ~ THI_cat, data = bayes_control_mild)
+describe_posterior(control_mild_CRIq_aged_BF)
+
+#violin-dot plot to visualise distibution and sample size for depression - control vs mild
+bayes_control_mild %>% 
+  ggplot(aes(x = THI_cat, y = DASS_D, fill = THI_cat)) +
+  geom_violindot(fill_dots = "black", size_dots = 1) +
+  scale_fill_material() +
+  theme_modern()
+
+#bayesian ttest for depression - control vs mild
+control_mild_depression_BF <- BayesFactor::ttestBF(formula = CRIq_aged ~ THI_cat, data = bayes_control_mild)
+describe_posterior(control_mild_depression_BF)
+
+#violin-dot plot to visualise distibution and sample size for anxiety - control vs mild
+bayes_control_mild %>% 
+  ggplot(aes(x = THI_cat, y = DASS_A, fill = THI_cat)) +
+  geom_violindot(fill_dots = "black", size_dots = 1) +
+  scale_fill_material() +
+  theme_modern()
+
+#bayesian ttest for anxiety - control vs mild
+control_mild_anxiety_BF <- BayesFactor::ttestBF(formula = DASS_A ~ THI_cat, data = bayes_control_mild)
+describe_posterior(control_mild_anxiety_BF)
+
+#violin-dot plot to visualise distibution and sample size for stress - control vs mild
+bayes_control_mild %>% 
+  ggplot(aes(x = THI_cat, y = DASS_S, fill = THI_cat)) +
+  geom_violindot(fill_dots = "black", size_dots = 1) +
+  scale_fill_material() +
+  theme_modern()
+
+#bayesian ttest for stress - control vs mild
+control_mild_stress_BF <- BayesFactor::ttestBF(formula = DASS_S ~ THI_cat, data = bayes_control_mild)
+describe_posterior(control_mild_stress_BF)
