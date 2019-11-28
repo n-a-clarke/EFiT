@@ -283,11 +283,13 @@ ggplot(control_modsev_control_mild_cd , aes(x = cohens_d, y = task, colour = gro
   geom_point(position = "jitter",
              shape = 15, size = 3) +
   xlim(c(0,1))
-  
+####################################  
 ###Bayesian between groups analysis
+####################################
 library(rstanarm)
 library(bayestestR)
 library(see)
+library(insight)
 
 #Controls vs modsev - drop mild observations for bayesian t-test
 bayes_control_modsev <- efit %>% 
@@ -302,8 +304,8 @@ bayes_control_modsev %>%
   theme_modern()
 
 #bayesian ttest for rule switch task - control vs modsev
-control_modsev_switch_cost_BF <- BayesFactor::ttestBF(formula = switchCost ~ THI_cat, data = bayes_control_modsev)
-describe_posterior(control_modsev_switch_cost_BF)
+control_modsev_switch_cost_BF <- BayesFactor::ttestBF(formula = switchCost ~ THI_cat, data = bayes_control_modsev)  
+BF_control_modsev_switchCost <- describe_posterior(control_modsev_switch_cost_BF)
 
 #violin-dot plot to visualise distibution and sample size for rule switch error count - control vs modsev
 bayes_control_modsev %>% 
@@ -314,7 +316,7 @@ bayes_control_modsev %>%
 
 #bayesian ttest for rule switch error - control vs modsev
 control_modsev_switch_error_BF <- BayesFactor::ttestBF(formula = ruleErrors ~ THI_cat, data = bayes_control_modsev)
-describe_posterior(control_modsev_switch_error_BF)
+BF_control_modsev_switchError <- describe_posterior(control_modsev_switch_error_BF)
 
 #violin-dot plot to visualise distibution and sample size for stroop response time - control vs modsev
 bayes_control_modsev %>% 
@@ -325,7 +327,7 @@ bayes_control_modsev %>%
 
 #bayesian ttest for stroop response time - control vs modsev
 control_modsev_stroop_rt_BF <- BayesFactor::ttestBF(formula = incongruent ~ THI_cat, data = bayes_control_modsev)
-describe_posterior(control_modsev_stroop_rt_BF)
+BF_control_modsev_stroopRT <- describe_posterior(control_modsev_stroop_rt_BF)
 
 #violin-dot plot to visualise distibution and sample size for stroop error count - control vs modsev
 bayes_control_modsev %>% 
@@ -336,7 +338,7 @@ bayes_control_modsev %>%
 
 #bayesian ttest for stroop error count - control vs modsev
 control_modsev_stroop_error_BF <- BayesFactor::ttestBF(formula = incongruent ~ THI_cat, data = bayes_control_modsev)
-describe_posterior(control_modsev_stroop_error_BF)
+BF_control_modsev_stroopError <- describe_posterior(control_modsev_stroop_error_BF)
 
 #violin-dot plot to visualise distibution and sample size for number letter sequencing - control vs modsev
 bayes_control_modsev %>% 
@@ -347,7 +349,7 @@ bayes_control_modsev %>%
 
 #bayesian ttest for number letter sequencing - control vs modsev
 control_modsev_nls_BF <- BayesFactor::ttestBF(formula = numLetSeq ~ THI_cat, data = bayes_control_modsev)
-describe_posterior(control_modsev_nls_BF)
+BF_control_modsev_nls <- describe_posterior(control_modsev_nls_BF)
 
 #violin-dot plot to visualise distibution and sample size for keep track task - control vs modsev
 bayes_control_modsev %>% 
@@ -358,7 +360,7 @@ bayes_control_modsev %>%
 
 #bayesian ttest for keep track task - control vs modsev
 control_modsev_keep_BF <- BayesFactor::ttestBF(formula = keepTrack ~ THI_cat, data = bayes_control_modsev)
-describe_posterior(control_modsev_keep_BF)
+BF_control_modsev_keep <- describe_posterior(control_modsev_keep_BF)
 
 #violin-dot plot to visualise distibution and sample size for RIF - control vs modsev
 bayes_control_modsev %>% 
@@ -369,7 +371,7 @@ bayes_control_modsev %>%
 
 #bayesian ttest for RIF - control vs modsev
 control_modsev_RIF_BF <- BayesFactor::ttestBF(formula = RIF_Diff ~ THI_cat, data = bayes_control_modsev)
-describe_posterior(control_modsev_RIF_BF)
+BF_control_modsev_RIF <- describe_posterior(control_modsev_RIF_BF)
 
 #violin-dot plot to visualise distibution and sample size for matrix reasoning - control vs modsev
 bayes_control_modsev %>% 
@@ -380,7 +382,7 @@ bayes_control_modsev %>%
 
 #bayesian ttest for matrix reasoning - control vs modsev
 control_modsev_matrix_BF <- BayesFactor::ttestBF(formula = matrixReason ~ THI_cat, data = bayes_control_modsev)
-describe_posterior(control_modsev_matrix_BF)
+BF_control_modsev_matrix <- describe_posterior(control_modsev_matrix_BF)
 
 #violin-dot plot to visualise distibution and sample size for dual task - control vs modsev
 bayes_control_modsev %>% 
@@ -391,7 +393,7 @@ bayes_control_modsev %>%
 
 #bayesian ttest for dual task - control vs modsev
 control_modsev_dual_BF <- BayesFactor::ttestBF(formula = dualTask_num ~ THI_cat, data = bayes_control_modsev)
-describe_posterior(control_modsev_dual_BF)
+BF_control_modsev_dual <- describe_posterior(control_modsev_dual_BF)
 
 #violin-dot plot to visualise distibution and sample size for CFQ- control vs modsev
 bayes_control_modsev %>% 
@@ -402,7 +404,7 @@ bayes_control_modsev %>%
 
 #bayesian ttest for CFQ - control vs modsev
 control_modsev_CFQ_BF <- BayesFactor::ttestBF(formula = CFQ ~ THI_cat, data = bayes_control_modsev)
-describe_posterior(control_modsev_CFQ_BF)
+BF_control_modsev_CFQ <- describe_posterior(control_modsev_CFQ_BF)
 
 #violin-dot plot to visualise distibution and sample size for RRS- control vs modsev
 bayes_control_modsev %>% 
@@ -413,7 +415,7 @@ bayes_control_modsev %>%
 
 #bayesian ttest for RRS - control vs modsev
 control_modsev_RRS_BF <- BayesFactor::ttestBF(formula = RRS ~ THI_cat, data = bayes_control_modsev)
-describe_posterior(control_modsev_RRS_BF)
+BF_control_modsev_RRS <- describe_posterior(control_modsev_RRS_BF)
 
 #violin-dot plot to visualise distibution and sample size for CRIq_aged - control vs modsev
 bayes_control_modsev %>% 
@@ -424,7 +426,7 @@ bayes_control_modsev %>%
 
 #bayesian ttest for CRIq_aged - control vs modsev
 control_modsev_CRIq_aged_BF <- BayesFactor::ttestBF(formula = CRIq_aged ~ THI_cat, data = bayes_control_modsev)
-describe_posterior(control_modsev_CRIq_aged_BF)
+BF_control_modsev_CRIq_aged <- describe_posterior(control_modsev_CRIq_aged_BF)
 
 #violin-dot plot to visualise distibution and sample size for depression - control vs modsev
 bayes_control_modsev %>% 
@@ -435,7 +437,7 @@ bayes_control_modsev %>%
 
 #bayesian ttest for depression - control vs modsev
 control_modsev_depression_BF <- BayesFactor::ttestBF(formula = CRIq_aged ~ THI_cat, data = bayes_control_modsev)
-describe_posterior(control_modsev_depression_BF)
+BF_control_modsev_depression <- describe_posterior(control_modsev_depression_BF)
 
 #violin-dot plot to visualise distibution and sample size for anxiety - control vs modsev
 bayes_control_modsev %>% 
@@ -446,7 +448,7 @@ bayes_control_modsev %>%
 
 #bayesian ttest for anxiety - control vs modsev
 control_modsev_anxiety_BF <- BayesFactor::ttestBF(formula = DASS_A ~ THI_cat, data = bayes_control_modsev)
-describe_posterior(control_modsev_anxiety_BF)
+BF_control_modsev_anxiety <- describe_posterior(control_modsev_anxiety_BF)
 
 #violin-dot plot to visualise distibution and sample size for stress - control vs modsev
 bayes_control_modsev %>% 
@@ -457,7 +459,7 @@ bayes_control_modsev %>%
 
 #bayesian ttest for stress - control vs modsev
 control_modsev_stress_BF <- BayesFactor::ttestBF(formula = DASS_S ~ THI_cat, data = bayes_control_modsev)
-describe_posterior(control_modsev_stress_BF)
+BF_control_modsev_stress <- describe_posterior(control_modsev_stress_BF)
 ###############################
 #Controls vs mild - drop modsev observations for bayesian t-test
 bayes_control_mild <- efit %>% 
@@ -473,7 +475,7 @@ bayes_control_mild %>%
 
 #bayesian ttest for rule switch task - control vs mild
 control_mild_switch_cost_BF <- BayesFactor::ttestBF(formula = switchCost ~ THI_cat, data = bayes_control_mild)
-describe_posterior(control_mild_switch_cost_BF)
+BF_control_mild_switchCost <- describe_posterior(control_mild_switch_cost_BF)
 
 #violin-dot plot to visualise distibution and sample size for rule switch error count - control vs mild
 bayes_control_mild %>% 
@@ -484,7 +486,7 @@ bayes_control_mild %>%
 
 #bayesian ttest for rule switch error - control vs mild
 control_mod_mild_switch_error_BF <- BayesFactor::ttestBF(formula = ruleErrors ~ THI_cat, data = bayes_control_mild)
-describe_posterior(control_mod_mild_switch_error_BF)
+BF_control_mild_switchError <- describe_posterior(control_mod_mild_switch_error_BF)
 
 #violin-dot plot to visualise distibution and sample size for stroop response time - control vs mild
 bayes_control_mild %>% 
@@ -495,7 +497,7 @@ bayes_control_mild %>%
 
 #bayesian ttest for stroop response time - control vs mild
 control_mild_stroop_rt_BF <- BayesFactor::ttestBF(formula = incongruent ~ THI_cat, data = bayes_control_mild)
-describe_posterior(control_mild_stroop_rt_BF)
+BF_control_mild_stroopRT <- describe_posterior(control_mild_stroop_rt_BF)
 
 #violin-dot plot to visualise distibution and sample size for stroop error count - control vs mild
 bayes_control_mild %>% 
@@ -506,7 +508,7 @@ bayes_control_mild %>%
 
 #bayesian ttest for stroop error count - control vs mild
 control_mild_stroop_error_BF <- BayesFactor::ttestBF(formula = incongruent ~ THI_cat, data = bayes_control_mild)
-describe_posterior(control_mild_stroop_error_BF)
+BF_control_mild_stroopError <- describe_posterior(control_mild_stroop_error_BF)
 
 #violin-dot plot to visualise distibution and sample size for number letter sequencing - control vs mild
 bayes_control_mild %>% 
@@ -517,7 +519,7 @@ bayes_control_mild %>%
 
 #bayesian ttest for number letter sequencing - control vs mild
 control_mild_nls_BF <- BayesFactor::ttestBF(formula = numLetSeq ~ THI_cat, data = bayes_control_mild)
-describe_posterior(control_mild_nls_BF)
+BF_control_mild_nls <- describe_posterior(control_mild_nls_BF)
 
 #violin-dot plot to visualise distibution and sample size for keep track task - control vs mild
 bayes_control_mild %>% 
@@ -528,7 +530,7 @@ bayes_control_mild %>%
 
 #bayesian ttest for keep track task - control vs mild
 control_mild_keep_BF <- BayesFactor::ttestBF(formula = keepTrack ~ THI_cat, data = bayes_control_modsev)
-describe_posterior(control_mild_keep_BF)
+BF_control_mild_keep <- describe_posterior(control_mild_keep_BF)
 
 #violin-dot plot to visualise distibution and sample size for RIF - control vs mild
 bayes_control_mild %>% 
@@ -539,7 +541,7 @@ bayes_control_mild %>%
 
 #bayesian ttest for RIF - control vs mild
 control_mild_RIF_BF <- BayesFactor::ttestBF(formula = RIF_Diff ~ THI_cat, data = bayes_control_mild)
-describe_posterior(control_mild_RIF_BF)
+BF_control_mild_RIF <- describe_posterior(control_mild_RIF_BF)
 
 #violin-dot plot to visualise distibution and sample size for matrix reasoning - control vs mild
 bayes_control_mild %>% 
@@ -550,7 +552,7 @@ bayes_control_mild %>%
 
 #bayesian ttest for matrix reasoning - control vs mild
 control_mild_matrix_BF <- BayesFactor::ttestBF(formula = matrixReason ~ THI_cat, data = bayes_control_mild)
-describe_posterior(control_mild_matrix_BF)
+BF_control_mild_matrix <- describe_posterior(control_mild_matrix_BF)
 
 #violin-dot plot to visualise distibution and sample size for dual task - control vs mild
 bayes_control_mild %>% 
@@ -561,7 +563,7 @@ bayes_control_mild %>%
 
 #bayesian ttest for dual task - control vs mild
 control_mild_dual_BF <- BayesFactor::ttestBF(formula = dualTask_num ~ THI_cat, data = bayes_control_mild)
-describe_posterior(control_mild_dual_BF)
+BF_control_mild_dual <- describe_posterior(control_mild_dual_BF)
 
 #violin-dot plot to visualise distibution and sample size for CFQ- control vs mild
 bayes_control_mild %>% 
@@ -572,7 +574,7 @@ bayes_control_mild %>%
 
 #bayesian ttest for CFQ - control vs mild
 control_mild_CFQ_BF <- BayesFactor::ttestBF(formula = CFQ ~ THI_cat, data = bayes_control_mild)
-describe_posterior(control_mild_CFQ_BF)
+BF_control_mild_CFQ <- describe_posterior(control_mild_CFQ_BF)
 
 #violin-dot plot to visualise distibution and sample size for RRS- control vs mild
 bayes_control_mild %>% 
@@ -583,7 +585,7 @@ bayes_control_mild %>%
 
 #bayesian ttest for RRS - control vs mild
 control_mild_RRS_BF <- BayesFactor::ttestBF(formula = RRS ~ THI_cat, data = bayes_control_mild)
-describe_posterior(control_mild_RRS_BF)
+BF_control_mild_RRS<- describe_posterior(control_mild_RRS_BF)
 
 #violin-dot plot to visualise distibution and sample size for CRIq_aged - control vs mild
 bayes_control_mild %>% 
@@ -594,7 +596,7 @@ bayes_control_mild %>%
 
 #bayesian ttest for CRIq_aged - control vs mild
 control_mild_CRIq_aged_BF <- BayesFactor::ttestBF(formula = CRIq_aged ~ THI_cat, data = bayes_control_mild)
-describe_posterior(control_mild_CRIq_aged_BF)
+BF_control_mild_CRIq_aged <- describe_posterior(control_mild_CRIq_aged_BF)
 
 #violin-dot plot to visualise distibution and sample size for depression - control vs mild
 bayes_control_mild %>% 
@@ -605,7 +607,7 @@ bayes_control_mild %>%
 
 #bayesian ttest for depression - control vs mild
 control_mild_depression_BF <- BayesFactor::ttestBF(formula = CRIq_aged ~ THI_cat, data = bayes_control_mild)
-describe_posterior(control_mild_depression_BF)
+BF_control_mild_depression <- describe_posterior(control_mild_depression_BF)
 
 #violin-dot plot to visualise distibution and sample size for anxiety - control vs mild
 bayes_control_mild %>% 
@@ -616,7 +618,7 @@ bayes_control_mild %>%
 
 #bayesian ttest for anxiety - control vs mild
 control_mild_anxiety_BF <- BayesFactor::ttestBF(formula = DASS_A ~ THI_cat, data = bayes_control_mild)
-describe_posterior(control_mild_anxiety_BF)
+BF_control_mild_anxiety <- describe_posterior(control_mild_anxiety_BF)
 
 #violin-dot plot to visualise distibution and sample size for stress - control vs mild
 bayes_control_mild %>% 
@@ -627,4 +629,88 @@ bayes_control_mild %>%
 
 #bayesian ttest for stress - control vs mild
 control_mild_stress_BF <- BayesFactor::ttestBF(formula = DASS_S ~ THI_cat, data = bayes_control_mild)
-describe_posterior(control_mild_stress_BF)
+BF_control_mild_stress <- describe_posterior(control_mild_stress_BF)
+#################
+#create table of bayes factors for control vs mild
+control_mild_BF <- data.frame(
+  c("Retrieval-induced forgetting", 
+    "Number letter sequencing", 
+    "Keep track", 
+    "Matrix reasoning",
+    "Stroop-RT", 
+    "Stroop-errors", 
+    "Switch cost", 
+    "Switch errors", 
+    "Dual task",
+    "CFQ",
+    "RRS",
+    "CRIq_aged",
+    "Depression",
+    "Anxiety",
+    "Stress"),
+  c(BF_control_mild_RIF$BF, 
+    BF_control_mild_nls$BF, 
+    BF_control_mild_keep$BF,
+    BF_control_mild_matrix$BF,
+    BF_control_mild_stroopRT$BF,
+    BF_control_mild_stroopError$BF,
+    BF_control_mild_switchCost$BF,
+    BF_control_mild_switchError$BF,
+    BF_control_mild_dual$BF,
+    BF_control_mild_CFQ$BF,
+    BF_control_mild_RRS$BF,
+    BF_control_mild_CRIq_aged$BF,
+    BF_control_mild_depression$BF,
+    BF_control_mild_anxiety$BF,
+    BF_control_mild_stress$BF)
+)
+colnames(control_mild_BF) <- c("name", "bayes_factor")
+control_mild_BF$bayes_factor <- signif(control_mild_BF$bayes_factor, 2)
+
+control_mild_BF <- control_mild_BF %>% arrange(desc(bayes_factor))
+
+#bayes factor for control vs modsev
+control_modsev_BF <- data.frame(
+  c("Retrieval-induced forgetting", 
+    "Number letter sequencing", 
+    "Keep track", 
+    "Matrix reasoning",
+    "Stroop-RT", 
+    "Stroop-errors", 
+    "Switch cost", 
+    "Switch errors", 
+    "Dual task",
+    "CFQ",
+    "RRS",
+    "CRIq_aged",
+    "Depression",
+    "Anxiety",
+    "Stress"),
+  c(BF_control_modsev_RIF$BF, 
+    BF_control_modsev_nls$BF, 
+    BF_control_modsev_keep$BF,
+    BF_control_modsev_matrix$BF,
+    BF_control_modsev_stroopRT$BF,
+    BF_control_modsev_stroopError$BF,
+    BF_control_modsev_switchCost$BF,
+    BF_control_modsev_switchError$BF,
+    BF_control_modsev_dual$BF,
+    BF_control_modsev_CFQ$BF,
+    BF_control_modsev_RRS$BF,
+    BF_control_modsev_CRIq_aged$BF,
+    BF_control_modsev_depression$BF,
+    BF_control_modsev_anxiety$BF,
+    BF_control_modsev_stress$BF)
+)
+colnames(control_modsev_BF) <- c("name", "bayes_factor")
+control_modsev_BF$bayes_factor <- signif(control_modsev_BF$bayes_factor, 2)
+
+control_modsev_BF <- control_modsev_BF %>% arrange(desc(bayes_factor))
+
+#filter BF tables for outcomes that support H1
+control_mild_BF %>% filter(bayes_factor > 1)
+control_modsev_BF %>% filter(bayes_factor > 1)
+
+#filter BF tables for outcomes that support H0
+control_mild_BF %>% filter(bayes_factor < 1)
+control_modsev_BF %>% filter(bayes_factor < 1)
