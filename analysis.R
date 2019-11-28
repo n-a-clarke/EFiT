@@ -3,8 +3,6 @@
 #load packages and data
 library(effectsize)
 library(skimr)
-library(bayestestR)
-library(ggdag)
 library(readxl)
 library(tidyverse)
 
@@ -29,6 +27,8 @@ efit %>% select(participant, THI, THI_cat)#check it's worked
 
 efit$THI_cat <- as.factor(efit$THI_cat) %>% ordered(levels = c("none", "mild", "modsev"))#factorise tinnitus groups
 
+#divide CRIq score by age
+efit <- efit %>% mutate(CRIq_aged = CRIq/age)
 
 #group_by tinnitus groups and count
 efit %>% 
@@ -284,3 +284,135 @@ ggplot(control_modsev_control_mild_cd , aes(x = cohens_d, y = task, colour = gro
              shape = 15, size = 3) +
   xlim(c(0,1))
   
+###Bayesian between groups analysis
+library(rstanarm)
+library(bayestestR)
+library(see)
+
+#Controls vs modsev - drop mild observations for bayesian t-test
+bayes_control_modsev <- efit %>% 
+  filter(THI_cat != "mild") %>% 
+  droplevels()
+
+#violin-dot plot to visualise distibution and sample size for rule switch cost - control vs modsev
+bayes_control_modsev %>% 
+  ggplot(aes(x = THI_cat, y = switchCost, fill = THI_cat)) +
+  geom_violindot(fill_dots = "black", size_dots = 1) +
+  scale_fill_material() +
+  theme_modern()
+
+#bayesian ttest for rule switch task - control vs modsev
+control_modsev_switch_cost_BF <- BayesFactor::ttestBF(formula = switchCost ~ THI_cat, data = bayes_control_modsev)
+describe_posterior(control_modsev_switch_cost_BF)
+
+#violin-dot plot to visualise distibution and sample size for rule switch error count - control vs modsev
+bayes_control_modsev %>% 
+  ggplot(aes(x = THI_cat, y = ruleErrors, fill = THI_cat)) +
+  geom_violindot(fill_dots = "black", size_dots = 1) +
+  scale_fill_material() +
+  theme_modern()
+
+#bayesian ttest for rule switch error - control vs modsev
+control_mod_sev_switch_error_BF <- BayesFactor::ttestBF(formula = ruleErrors ~ THI_cat, data = bayes_control_modsev)
+describe_posterior(control_mod_sev_switch_error_BF)
+
+#violin-dot plot to visualise distibution and sample size for stroop response time - control vs modsev
+bayes_control_modsev %>% 
+  ggplot(aes(x = THI_cat, y = incongruent, fill = THI_cat)) +
+  geom_violindot(fill_dots = "black", size_dots = 1) +
+  scale_fill_material() +
+  theme_modern()
+
+#bayesian ttest for rule switch task - control vs modsev
+control_mod_sev_stroop_rt_BF <- BayesFactor::ttestBF(formula = incongruent ~ THI_cat, data = bayes_control_modsev)
+describe_posterior(control_mod_sev_stroop_rt_BF)
+
+#violin-dot plot to visualise distibution and sample size for number letter sequencing - control vs modsev
+bayes_control_modsev %>% 
+  ggplot(aes(x = THI_cat, y = numLetSeq, fill = THI_cat)) +
+  geom_violindot(fill_dots = "black", size_dots = 1) +
+  scale_fill_material() +
+  theme_modern()
+
+#bayesian ttest for number letter sequencing - control vs modsev
+control_mod_sev_nls_BF <- BayesFactor::ttestBF(formula = numLetSeq ~ THI_cat, data = bayes_control_modsev)
+describe_posterior(control_mod_sev_nls_BF)
+
+#violin-dot plot to visualise distibution and sample size for keep track task - control vs modsev
+bayes_control_modsev %>% 
+  ggplot(aes(x = THI_cat, y = keepTrack, fill = THI_cat)) +
+  geom_violindot(fill_dots = "black", size_dots = 1) +
+  scale_fill_material() +
+  theme_modern()
+
+#bayesian ttest for number letter sequencing - control vs modsev
+control_modsev_keep_BF <- BayesFactor::ttestBF(formula = keepTrack ~ THI_cat, data = bayes_control_modsev)
+describe_posterior(control_modsev_keep_BF)
+
+#violin-dot plot to visualise distibution and sample size for RIF - control vs modsev
+bayes_control_modsev %>% 
+  ggplot(aes(x = THI_cat, y = RIF_Diff, fill = THI_cat)) +
+  geom_violindot(fill_dots = "black", size_dots = 1) +
+  scale_fill_material() +
+  theme_modern()
+
+#bayesian ttest for RIF - control vs modsev
+control_modsev_RIF_BF <- BayesFactor::ttestBF(formula = RIF_Diff ~ THI_cat, data = bayes_control_modsev)
+describe_posterior(control_modsev_RIF_BF)
+
+#violin-dot plot to visualise distibution and sample size for matrix reasoning - control vs modsev
+bayes_control_modsev %>% 
+  ggplot(aes(x = THI_cat, y = matrixReason, fill = THI_cat)) +
+  geom_violindot(fill_dots = "black", size_dots = 1) +
+  scale_fill_material() +
+  theme_modern()
+
+#bayesian ttest for matrix reasoning - control vs modsev
+control_modsev_matrix_BF <- BayesFactor::ttestBF(formula = matrixReason ~ THI_cat, data = bayes_control_modsev)
+describe_posterior(control_modsev_matrix_BF)
+
+#violin-dot plot to visualise distibution and sample size for dual task - control vs modsev
+bayes_control_modsev %>% 
+  ggplot(aes(x = THI_cat, y = dualTask_num, fill = THI_cat)) +
+  geom_violindot(fill_dots = "black", size_dots = 1) +
+  scale_fill_material() +
+  theme_modern()
+
+#bayesian ttest for dual task - control vs modsev
+control_modsev_dual_BF <- BayesFactor::ttestBF(formula = dualTask_num ~ THI_cat, data = bayes_control_modsev)
+describe_posterior(control_modsev_dual_BF)
+
+#violin-dot plot to visualise distibution and sample size for CFQ- control vs modsev
+bayes_control_modsev %>% 
+  ggplot(aes(x = THI_cat, y = CFQ, fill = THI_cat)) +
+  geom_violindot(fill_dots = "black", size_dots = 1) +
+  scale_fill_material() +
+  theme_modern()
+
+#bayesian ttest for CFQ - control vs modsev
+control_modsev_CFQ_BF <- BayesFactor::ttestBF(formula = CFQ ~ THI_cat, data = bayes_control_modsev)
+describe_posterior(control_modsev_CFQ_BF)
+
+#violin-dot plot to visualise distibution and sample size for RRS- control vs modsev
+bayes_control_modsev %>% 
+  ggplot(aes(x = THI_cat, y = RRS, fill = THI_cat)) +
+  geom_violindot(fill_dots = "black", size_dots = 1) +
+  scale_fill_material() +
+  theme_modern()
+
+#bayesian ttest for RRS - control vs modsev
+control_modsev_RRS_BF <- BayesFactor::ttestBF(formula = RRS ~ THI_cat, data = bayes_control_modsev)
+describe_posterior(control_modsev_RRS_BF)
+
+#violin-dot plot to visualise distibution and sample size for RRS - control vs modsev
+bayes_control_modsev %>% 
+  ggplot(aes(x = THI_cat, y = CRIq_aged, fill = THI_cat)) +
+  geom_violindot(fill_dots = "black", size_dots = 1) +
+  scale_fill_material() +
+  theme_modern()
+
+#bayesian ttest for CRIq_aged - control vs modsev
+control_modsev_CRIq_aged_BF <- BayesFactor::ttestBF(formula = CRIq_aged ~ THI_cat, data = bayes_control_modsev)
+describe_posterior(control_modsev_CRIq_aged_BF)
+
+
