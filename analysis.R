@@ -2,12 +2,13 @@
 
 #load packages and data
 library(effectsize)
+library(psych)
 library(skimr)
 library(readxl)
 library(tidyverse)
 
-efit <- read_xlsx("EFiT_Main data set_05NOV2019.xlsx") %>% 
-  filter(!partNum == 3, !partNum ==30, !partNum == 79) #remove participants 3, 30 
+efit <- read_xlsx("EFiT_Main data set_29NOV2019.xlsx") %>% 
+  filter(!partNum == 3, !partNum ==30, !partNum == 79, !partNum == 121) #remove participants 3, 30 
 efit <- efit %>% rename(participant = partNum)
 
 stroop <- read_csv("stroopTrimmed.csv")
@@ -31,7 +32,7 @@ efit$THI_cat <- as.factor(efit$THI_cat) %>% ordered(levels = c("none", "mild", "
 efit <- efit %>% mutate(CRIq_aged = CRIq/age)
 
 #group_by tinnitus groups and count
-efit %>% 
+groupCount <- efit %>% 
   group_by(THI_cat) %>% 
   summarise(group_count = n()) %>% 
   arrange(THI_cat)
@@ -194,7 +195,19 @@ dual_cd_control_modsev <- cohens_d(controls$dualTask_num, modsev_tin$dualTask_nu
 dual_cd_control_mild <- cohens_d(controls$dualTask_num, mild_tin$dualTask_num)#controls vs mild
 dual_cd_mild_modsev <- cohens_d(mild_tin$dualTask_num, modsev_tin$dualTask_num)#mild vs modsev
 
-#create vectors of cohens_d scores for control vs modsev
+#cohens_d confidence intervals for controls vs modsev
+rif_cd_control_modsev_CI <- d.ci(rif_cd_control_modsev, n1=groupCount$group_count[1], n2=groupCount$group_count[3])#confidence interval for RIF
+nls_cd_control_modsev_CI <- d.ci(nls_cd_control_modsev, n1=groupCount$group_count[1], n2=groupCount$group_count[3])#confidence interval for nls
+keep_cd_control_modsev_CI <- d.ci(keep_cd_control_modsev, n1=groupCount$group_count[1], n2=groupCount$group_count[3])#confidence interval for keep track
+matrix_cd_control_modsev_CI <- d.ci(matrix_cd_control_modsev, n1=groupCount$group_count[1], n2=groupCount$group_count[3])#confidence interval for matrix reasoning
+stroopRT_cd_control_modsev_CI <- d.ci(stroopRT_cd_control_modsev , n1=groupCount$group_count[1], n2=groupCount$group_count[3])#confidence interval for Stroop RT
+stroopERR_cd_control_modsev_CI <- d.ci(stroopERR_cd_control_modsev , n1=groupCount$group_count[1], n2=groupCount$group_count[3])#confidence interval for Stroop errors
+switchCostRT_cd_control_modsev_CI <- d.ci(switchCostRT_cd_control_modsev , n1=groupCount$group_count[1], n2=groupCount$group_count[3])#confidence interval for switch cost
+switchErr_cd_control_modsev_CI <- d.ci(switchErr_cd_control_modsev , n1=groupCount$group_count[1], n2=groupCount$group_count[3])#confidence interval for switch errors
+dual_cd_control_modsevCI <- d.ci(dual_cd_control_modsev , n1=groupCount$group_count[1], n2=groupCount$group_count[3])#confidence interval for dual task
+
+
+#create dataframe of cohens_d scores for control vs modsev
 control_modsev_cd <- data.frame(
   c("Retrieval-induced forgetting", 
     "Number letter sequencing", 
@@ -214,11 +227,40 @@ control_modsev_cd <- data.frame(
     switchCostRT_cd_control_modsev,
     switchErr_cd_control_modsev, 
     dual_cd_control_modsev),
+  c(rif_cd_control_modsev_CI[1], 
+    nls_cd_control_modsev_CI[1], 
+    keep_cd_control_modsev_CI[1], 
+    matrix_cd_control_modsev_CI[1], 
+    stroopRT_cd_control_modsev_CI[1], 
+    stroopERR_cd_control_modsev_CI[1], 
+    switchCostRT_cd_control_modsev_CI[1],
+    switchErr_cd_control_modsev_CI[1], 
+    dual_cd_control_modsevCI[3]),
+  c(rif_cd_control_modsev_CI[3], 
+    nls_cd_control_modsev_CI[3], 
+    keep_cd_control_modsev_CI[3], 
+    matrix_cd_control_modsev_CI[3], 
+    stroopRT_cd_control_modsev_CI[3], 
+    stroopERR_cd_control_modsev_CI[3], 
+    switchCostRT_cd_control_modsev_CI[3],
+    switchErr_cd_control_modsev_CI[3], 
+    dual_cd_control_modsevCI[3]),
   c(rep(1, 9))
   )
-colnames(control_modsev_cd) <- c("task", "cohens_d", "group")
+colnames(control_modsev_cd) <- c("task", "cohens_d", "CI_lower","CI_upper", "group")
 
-#create vectors of cohens_d scores for control vs mild
+#cohens_d confidence intervals for controls vs mild
+rif_cd_control_mild_CI <- d.ci(rif_cd_control_mild, n1=groupCount$group_count[1], n2=groupCount$group_count[3])#confidence interval for RIF
+nls_cd_control_mild_CI <- d.ci(nls_cd_control_mild, n1=groupCount$group_count[1], n2=groupCount$group_count[3])#confidence interval for nls
+keep_cd_control_mild_CI <- d.ci(keep_cd_control_mild, n1=groupCount$group_count[1], n2=groupCount$group_count[3])#confidence interval for keep track
+matrix_cd_control_mild_CI <- d.ci(matrix_cd_control_mild, n1=groupCount$group_count[1], n2=groupCount$group_count[3])#confidence interval for matrix reasoning
+stroopRT_cd_control_mild_CI <- d.ci(stroopRT_cd_control_mild , n1=groupCount$group_count[1], n2=groupCount$group_count[3])#confidence interval for Stroop RT
+stroopERR_cd_control_mild_CI <- d.ci(stroopERR_cd_control_mild , n1=groupCount$group_count[1], n2=groupCount$group_count[3])#confidence interval for Stroop errors
+switchCostRT_cd_control_mild_CI <- d.ci(switchCostRT_cd_control_mild , n1=groupCount$group_count[1], n2=groupCount$group_count[3])#confidence interval for switch cost
+switchErr_cd_control_mild_CI <- d.ci(switchErr_cd_control_mild , n1=groupCount$group_count[1], n2=groupCount$group_count[3])#confidence interval for switch errors
+dual_cd_control_mildCI <- d.ci(dual_cd_control_mild , n1=groupCount$group_count[1], n2=groupCount$group_count[3])#confidence interval for dual task
+
+#create dataframe of cohens_d scores for control vs mild
 control_mild_cd <- data.frame(
   c("Retrieval-induced forgetting", 
     "Number letter sequencing", 
@@ -238,9 +280,27 @@ control_mild_cd <- data.frame(
     switchCostRT_cd_control_mild,
     switchErr_cd_control_mild, 
     dual_cd_control_mild),
+  c(rif_cd_control_mild_CI[1], 
+    nls_cd_control_mild_CI[1], 
+    keep_cd_control_mild_CI[1], 
+    matrix_cd_control_mild_CI[1], 
+    stroopRT_cd_control_mild_CI[1], 
+    stroopERR_cd_control_mild_CI[1], 
+    switchCostRT_cd_control_mild_CI[1],
+    switchErr_cd_control_mild_CI[1], 
+    dual_cd_control_mildCI[1]),
+  c(rif_cd_control_mild_CI[3], 
+    nls_cd_control_mild_CI[3], 
+    keep_cd_control_mild_CI[3], 
+    matrix_cd_control_mild_CI[3], 
+    stroopRT_cd_control_mild_CI[3], 
+    stroopERR_cd_control_mild_CI[3], 
+    switchCostRT_cd_control_mild_CI[3],
+    switchErr_cd_control_mild_CI[3], 
+    dual_cd_control_mildCI[3]),
   c(rep(2, 9))
 )
-colnames(control_mild_cd) <- c("task", "cohens_d", "group")
+colnames(control_mild_cd) <- c("task", "cohens_d", "CI_lower","CI_upper", "group")
 
 #create vectors of cohens_d scores for control vs mild
 mild_modsev_cd <- data.frame(
@@ -266,23 +326,23 @@ mild_modsev_cd <- data.frame(
 )
 colnames(mild_modsev_cd) <- c("task", "cohens_d", "group")
 
-#join tables together
-all_cohens_d <- bind_rows(control_modsev_cd, control_mild_cd, mild_modsev_cd)
+#join two control tables together
+controlVSmodsev_controlVSmild_cohens_d <- bind_rows(control_modsev_cd, control_mild_cd)
 #change minus signs to positives for plotting
-all_cohens_d <- all_cohens_d %>% arrange(cohens_d)#arrange for easier transform
-all_cohens_d[1:17,2] <- all_cohens_d[1:17,2]*-1
+controlVSmodsev_controlVSmild_cohens_d <- controlVSmodsev_controlVSmild_cohens_d %>% arrange(cohens_d)#arrange for easier transform
+controlVSmodsev_controlVSmild_cohens_d[1:12,2:4] <- controlVSmodsev_controlVSmild_cohens_d[1:12,2:4]*-1#transofrm direction of negative effects for easier interpretation
 #change group membership column to factor
-all_cohens_d[,3] <- as.factor(all_cohens_d[,3])
+controlVSmodsev_controlVSmild_cohens_d[,5] <- as.factor(controlVSmodsev_controlVSmild_cohens_d[,5])
 
-control_modsev_control_mild_cd <- all_cohens_d %>% 
-  filter(group == 1 | group == 2)
+#plot of cohens_d for control vs modsev and control vs mild for each task
+pos <- position_jitter(width = NULL, height = 1, seed = 123)
 
+ggplot(controlVSmodsev_controlVSmild_cohens_d , aes(x = cohens_d, y = task, colour = group)) +
+  geom_point(alpha = 0.9, shape = 15, size = 3, position = pos) +
+  xlim(c(-1,1)) +
+  geom_errorbarh(alpha = 0.7, aes(xmin=CI_lower, xmax=CI_upper), position = pos) +
+  geom_vline(xintercept = 0, linetype = "longdash")
 
-#plot of cohens_d for each task
-ggplot(control_modsev_control_mild_cd , aes(x = cohens_d, y = task, colour = group)) +
-  geom_point(position = "jitter",
-             shape = 15, size = 3) +
-  xlim(c(0,1))
 ####################################  
 ###Bayesian between groups analysis
 ####################################
