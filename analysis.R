@@ -235,7 +235,7 @@ control_modsev_cd <- data.frame(
     stroopERR_cd_control_modsev_CI[1], 
     switchCostRT_cd_control_modsev_CI[1],
     switchErr_cd_control_modsev_CI[1], 
-    dual_cd_control_modsevCI[3]),
+    dual_cd_control_modsevCI[1]),
   c(rif_cd_control_modsev_CI[3], 
     nls_cd_control_modsev_CI[3], 
     keep_cd_control_modsev_CI[3], 
@@ -245,7 +245,7 @@ control_modsev_cd <- data.frame(
     switchCostRT_cd_control_modsev_CI[3],
     switchErr_cd_control_modsev_CI[3], 
     dual_cd_control_modsevCI[3]),
-  c(rep(1, 9))
+  c(rep("contol vs modsev", 9))
   )
 colnames(control_modsev_cd) <- c("task", "cohens_d", "CI_lower","CI_upper", "group")
 
@@ -298,7 +298,7 @@ control_mild_cd <- data.frame(
     switchCostRT_cd_control_mild_CI[3],
     switchErr_cd_control_mild_CI[3], 
     dual_cd_control_mildCI[3]),
-  c(rep(2, 9))
+  c(rep("control vs mild", 9))
 )
 colnames(control_mild_cd) <- c("task", "cohens_d", "CI_lower","CI_upper", "group")
 
@@ -333,15 +333,18 @@ controlVSmodsev_controlVSmild_cohens_d <- controlVSmodsev_controlVSmild_cohens_d
 controlVSmodsev_controlVSmild_cohens_d[1:12,2:4] <- controlVSmodsev_controlVSmild_cohens_d[1:12,2:4]*-1#transofrm direction of negative effects for easier interpretation
 #change group membership column to factor
 controlVSmodsev_controlVSmild_cohens_d[,5] <- as.factor(controlVSmodsev_controlVSmild_cohens_d[,5])
+#round confidence intervals and lower/upper bounds to 1 dececimal place
+controlVSmodsev_controlVSmild_cohens_d$cohens_d <- round(controlVSmodsev_controlVSmild_cohens_d$cohens_d,1)
+controlVSmodsev_controlVSmild_cohens_d$CI_lower <- round(controlVSmodsev_controlVSmild_cohens_d$CI_lower,2)
+controlVSmodsev_controlVSmild_cohens_d$CI_upper <- round(controlVSmodsev_controlVSmild_cohens_d$CI_upper,2)
 
 #plot of cohens_d for control vs modsev and control vs mild for each task
-pos <- position_jitter(width = NULL, height = 1, seed = 123)
-
-ggplot(controlVSmodsev_controlVSmild_cohens_d , aes(x = cohens_d, y = task, colour = group)) +
-  geom_point(alpha = 0.9, shape = 15, size = 3, position = pos) +
-  xlim(c(-1,1)) +
-  geom_errorbarh(alpha = 0.7, aes(xmin=CI_lower, xmax=CI_upper), position = pos) +
-  geom_vline(xintercept = 0, linetype = "longdash")
+ggplot(controlVSmodsev_controlVSmild_cohens_d , aes(x = task, y = cohens_d, colour = group)) +
+  geom_point(alpha = 0.9, shape = 15, size = 3, position = position_dodge(width=0.5)) +
+  geom_errorbar(alpha = 0.7, aes(ymin=CI_lower, ymax=CI_upper), position=position_dodge(width=0.5)) +
+  geom_hline(yintercept = 0, linetype = "longdash") +
+  coord_flip() +
+  theme_minimal()
 
 ####################################  
 ###Bayesian between groups analysis
