@@ -3,7 +3,7 @@
 ##########################################
 library(tidyverse)
 
-obs <- setdiff(1:120, c(3, 30))#change this to current participant number!
+obs <- setdiff(1:122, c(3, 30))#change this to current participant number!
 
 #mass import files and select the relevant information
 files <- dir(pattern = "*.csv")
@@ -32,8 +32,13 @@ categorySum <- function(x) {
   }
 
 #iterate autocategory summing function over vector of participant numbers
-obs %>% 
+processed_RIF <- obs %>% 
   map_df(categorySum) %>%  
-  pivot_wider(names_from = pracCat, values_from = total)
+  pivot_wider(names_from = pracCat, values_from = total) 
+
+#rename last two colums
+processed_RIF <- processed_RIF %>% 
+  rename(Rp_minus =`Rp-`, Rp_plus =`Rp+`)
 
 #write a .csv file
+write.csv(processed_RIF, "processedRIF.csv", row.names = FALSE)
