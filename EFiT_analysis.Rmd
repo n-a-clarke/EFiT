@@ -1,0 +1,85 @@
+---
+title: "EFiT Data Analysis"
+author: "N. A. Clarke"
+date: "19 December 2019"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE)
+```
+
+```{r load packages}
+library(effectsize)
+library(rstanarm)
+library(bayestestR)
+library(see)
+library(insight)
+library(psych)
+library(skimr)
+library(cowplot)
+library(ggdag)
+library(readxl)
+library(tidyverse)
+```
+
+```{r load in data file and tidy, warning=FALSE}
+efit <- read_xlsx("EFiT_Main data set_16DEC2019.xlsx") %>% 
+  filter(!partNum == 3, !partNum ==30, !partNum == 79) #remove participants no.3 failed screen, no.30 had to withdraw, no.79 may have unreliable results 
+#select varibles that aren't automatically processed with other scripts
+efit <- efit %>% select(partNum:dualTask_wordsDiff, matrixReason, keepTrack)
+efit <- efit %>% rename(participant = partNum)
+#load files for automatically processed scripts: dual, nls, rif, rule, stroop
+stroopJoin <- read_csv("processedStroop.csv")
+ruleJoin <- read_csv("processedRule.csv") 
+nlsJoin <- read_csv("processedNLS.csv")
+dualJoin <- read_csv("processedDual.csv")
+rifJoin <- read_csv("processedRIF.csv")
+#join to main set by participant number
+efit <- left_join(efit, ruleJoin, by = "participant")#join rule file
+efit <- left_join(efit, stroopJoin, by = "participant")#join stroop file
+efit <- left_join(efit, nlsJoin, by = "participant")#join nls file
+efit <- left_join(efit, dualJoin, by = "participant")#join dual file
+efit <- left_join(efit, rifJoin, by = "participant")#join rif file
+```
+#Data overview and descriptive statistics
+```{r add categories and count}
+efit <- efit %>% 
+  mutate(
+    THI_cat = ifelse(
+      THI >= 38 ,"modsev", ifelse(
+        THI > 0 & THI <= 37, "mild", "none"
+      ))) #add a categorical variable with the groups split by THI scores
+
+efit$THI_cat <- as.factor(efit$THI_cat) %>% ordered(levels = c("none", "mild", "modsev"))#factorise tinnitus groups
+
+#divide CRIq score by age
+efit <- efit %>% mutate(CRIq_aged = CRIq/age)
+
+#create new RIF variable (proportion of correct respones and RIFdif (i.e. a measure of the RIF effect)
+efit <- efit %>% 
+mutate(pRIF_RpPlus = (Rp_plus/12) * 100, 
+       pRIF_RpMinus = (Rp_minus/12) * 100,
+       pRIF_Np = (Np/24) * 100,
+       RIF_Diff = pRIF_Np - pRIF_RpMinus)
+
+#group_by tinnitus groups and count
+groupCount <- efit %>% 
+  group_by(THI_cat) %>% 
+  summarise(group_count = n()) %>% 
+  arrange(THI_cat)
+
+
+#group_by tinnitus groups and median age
+groupAge <- efit %>% 
+  group_by(THI_cat) %>% 
+  summarise(median_age = median(age))
+
+RIF <- efit %>% 
+  group_by(THI_cat) %>% 
+  summarise(Diff = mean(RIF_Diff),
+            Plus = mean(pRIF_RpPlus),
+            Minus = mean(pRIF_RpMinus),
+            Np = mean(pRIF_Np))
+
+```
