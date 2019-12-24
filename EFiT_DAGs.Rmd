@@ -1,0 +1,113 @@
+---
+title: "EFiT DAG models"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+```{r load packages, echo=FALSE, warning=FALSE, message=FALSE}
+library(dagitty, warn.conflicts=F, quietly=T)
+library(ggdag, warn.conflicts=F, quietly=T)
+library(tidyverse,warn.conflicts=F, quietly=T)
+```
+
+Example causal model containing all EFiT variables.
+
+```{r example model}
+# Initialize the DAG. "y ~ x" means that x is a parent of y (y <- x)
+example_m1 <- dagify(
+            THI ~ Tp,
+            THI ~ EF,
+            C2 ~ C1,
+            Tp ~ C2,
+            EF ~ C3 + C4 + C5,
+            THI ~ C6 + C7,
+            EF ~ C8,
+            EF ~ C1,
+            THI ~ TD,
+             labels =
+               c("EF" = "Executive \n function",
+                 "THI" = "Reported \n tinnitus \n severity",
+                 "Tp" = "Perceiving \n tinnitus",
+                 "TD" = "Tinnitus \n Duration",
+                 "C1" = "Age",
+                 "C2" = "Hearing \n thresholds",
+                 "C3" = "Depression",
+                 "C4" = "Anxiety",
+                 "C5" = "Stress",
+                 "C6" = "Rumination",
+                 "C7" = "Cognitive \n failures",
+                 "C8" = "Cognitive \n reserve"), 
+              exposure = "Tp",
+              outcome = "THI") 
+
+
+# Plot the DAG
+example_m1 %>% ggplot(aes(x = x, y = y, xend = xend, yend = yend)) +
+  geom_dag_edges() +
+  geom_dag_point() +
+  geom_dag_text() +
+  scale_adjusted() +
+  geom_dag_label_repel(aes(label = label),
+                       nudge_y = -.1,
+                       nudge_x = .25,
+                       alpha = .85) +
+  theme_void()
+```
+
+Group association model
+```{r simple assocation model}
+group_m1 <- dagify(
+  EF ~~ THI,
+  labels =
+    c("EF" = "Executive \n function",
+      "THI" = "Reported \n tinnitus \n severity",
+      "Tp" = "Perceiving \n tinnitus"),
+  exposure = "THI",
+  outcome = "EF"
+)
+
+# Plot the DAG
+group_m1 %>% ggplot(aes(x = x, y = y, xend = xend, yend = yend)) +
+  geom_dag_edges(curvature = 0) +
+  geom_dag_point() +
+  geom_dag_text() +
+  scale_adjusted() +
+  geom_dag_label_repel(aes(label = label),
+                       nudge_y = -.1,
+                       nudge_x = .25,
+                       alpha = .85) +
+  theme_void()
+```
+
+Group association model with typical confounders
+```{r association model with confounders}
+# Initialize the DAG. "y ~ x" means that x is a parent of y (y <- x)
+group_m2 <- dagify(
+  THI ~~ EF, 
+  THI ~~ C1 + C2 + C3 + C4 + C5,
+  labels =
+    c("EF" = "Executive \n function",
+                 "THI" = "Reported \n tinnitus \n severity",
+                 "Tp" = "Perceiving \n tinnitus",
+                 "TD" = "Tinnitus \n Duration",
+                 "C1" = "Age",
+                 "C2" = "Hearing \n thresholds",
+                 "C3" = "Depression",
+                 "C4" = "Anxiety",
+                 "C5" = "Stress")
+) 
+
+
+# Plot the DAG
+group_m2 %>% ggplot(aes(x = x, y = y, xend = xend, yend = yend)) +
+  geom_dag_edges(curvature = 0) +
+  geom_dag_point() +
+  geom_dag_text() +
+  scale_adjusted() +
+  geom_dag_label_repel(aes(label = label),
+                       nudge_y = -.1,
+                       nudge_x = .25,
+                       alpha = .85) +
+  theme_void()
+```
+
