@@ -12,6 +12,7 @@ knitr::opts_chunk$set(echo = FALSE, message = FALSE)
 ```
 
 ```{r load packages}
+library(broom)
 library(effectsize)
 library(rstanarm)
 library(bayestestR)
@@ -104,11 +105,11 @@ modsev_tin <- efit %>%
 ##Controls and Mild
 ###Number-letter sequencing
 ```{r t-test control-mild letter-number sequencing}
-t.test(controls$nls_correct, mild_tin$nls_correct, alternative = "greater",var.equal = F)#controls greater than mild
+nls_control_mild_t.test <- t.test(controls$nls_correct, mild_tin$nls_correct, alternative = "greater",var.equal = F)#controls greater than mild
 ```
 
 ```{r tidy control-mild letter-number sequencing t-test to extract coefficients}
-
+nls_control_mild_t.test_tidy <- tidy(nls_control_mild_t.test)
 ```
 Welch two-sample t-test for number-letter sequencing task shows that...
 
@@ -292,3 +293,108 @@ t.test(controls$matrixReason, modsev_tin$matrixReason, alternative = "greater",v
 Welch two-sample t-test for the matrix reasoning task shows that...
 
 ##Mild and Modsev
+###Number-letter sequencing
+```{r t-test mild-modsev letter-number sequencing}
+nls_mild_modsev_t.test <- t.test(mild_tin$nls_correct, modsev_tin$nls_correct, alternative = "greater",var.equal = F)#mild greater than modsev
+```
+
+```{r tidy mild-modsev letter-number sequencing t-test to extract coefficients}
+nls_mild_modsev_t.test_tidy <- tidy(nls_control_mild_t.test)
+```
+Welch two-sample t-test for number-letter sequencing task shows that...
+
+###Keep-track
+```{r t-test mild-modsev keep-track}
+t.test(mild_tin$keepTrack, modsev_tin$keepTrack, alternative = "greater",var.equal = F)#mild greater than modsev
+```
+
+```{r tidy mild-modsev keep-track t-test to extract coefficients}
+
+```
+Welch two-sample t-test for the keep-track task shows that...
+
+###Stroop
+####Response time (incongruent)
+```{r t-test mild-modsev stroop}
+t.test(mild_tin$stroop_incongruent, modsev_tin$stroop_incongruent, alternative = "less",var.equal = F)#mild less than modsev
+```
+
+```{r tidy mild-modsev stroop t-test to extract coefficients}
+
+```
+Welch two-sample t-test for the Stroop incongruent response time shows that...
+
+####Errors
+```{r t-test mild-modsev stroop errors}
+t.test(mild_tin$stroop_errors, modsev_tin$stroop_errors, alternative = "less",var.equal = F)#mild less than modsev
+```
+
+```{r tidy mild-modsev stroop errors t-test to extract coefficients}
+
+```
+Welch two-sample t-test for the Stroop errors shows that...
+
+###Retrieval-induced forgetting
+```{r t-test mild-modsev retrieval-induced forgetting}
+t.test(mild_tin$RIF_Diff, modsev_tin$RIF_Diff, alternative = "greater",var.equal = F)#mild greater than modsev
+```
+
+```{r tidy mild-modsev retrieval-induced forgetting t-test to extract coefficients}
+
+```
+Welch two-sample t-test for the RIF task shows that...
+
+###Rule-switching
+####Switch cost
+```{r mild-modsev t-test switch cost}
+t.test(mild_tin$switch_cost, modsev_tin$switch_cost, alternative = "less",var.equal = F)#mild less than modsev
+```
+
+```{r tidy mild-modsev switch cost t-test to extract coefficients}
+
+```
+Welch two-sample t-test for the switch cost shows that...
+
+####Errors
+```{r mild-modsev t-test rule-switching errors}
+t.test(mild_tin$rule_errors, modsev_tin$rule_errors, alternative = "less",var.equal = F)#mild less than modsev
+```
+
+```{r tidy mild-modsev rule-switching errors t-test to extract coefficients}
+
+```
+Welch two-sample t-test for rule-switching errors shows that..
+
+
+###Dual task
+```{r t-test mild-modsev dual task}
+t.test(mild_tin$dual_task_total, modsev_tin$dual_task_total, alternative = "greater",var.equal = F)#mild greater than modsev
+```
+
+```{r tidy mild-modsev dual task t-test to extract coefficients}
+
+```
+Welch two-sample t-test for the dual task shows that...
+
+###Matrix reasoning
+
+```{r mild-modsev t-test matrix reasoning}
+t.test(mild_tin$matrixReason, modsev_tin$matrixReason, alternative = "greater",var.equal = F)#mild greater than modsev
+```
+
+```{r tidy mild-modsev matrix reasoning t-test to extract coefficients}
+
+```
+Welch two-sample t-test for the matrix reasoning task shows that...
+
+##Table of t-test results
+###Controls and Mild
+###Controls and Modsev
+###Mild and Modsev
+
+#Cohen's d
+```{r cohens d}
+
+```
+
+#Bayesian t-tests
