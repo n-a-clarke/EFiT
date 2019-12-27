@@ -103,29 +103,124 @@ modsev_tin <- efit %>%
 ```
 ##Controls and Mild
 ###Number-letter sequencing
-```{r t-test letter-number sequencing}
+```{r t-test control-mild letter-number sequencing}
 t.test(controls$nls_correct, mild_tin$nls_correct, alternative = "greater",var.equal = F)#controls greater than mild
 ```
 
-```{r tidy letter-number sequencing t-test to extract coefficients}
+```{r tidy control-mild letter-number sequencing t-test to extract coefficients}
 
 ```
 Welch two-sample t-test for number-letter sequencing task shows that...
 
 ###Keep-track
-```{r t-test keep-track}
+```{r t-test control-mild keep-track}
 t.test(controls$keepTrack, mild_tin$keepTrack, alternative = "greater",var.equal = F)#controls greater than mild
 ```
 
-```{r tidy keep-track t-test to extract coefficients}
+```{r tidy control-mild keep-track t-test to extract coefficients}
 
 ```
 Welch two-sample t-test for the keep-track task shows that...
 
 ###Stroop
 ####Response time (incongruent)
-```{r t-test stroop}
+```{r t-test control-mild stroop}
 t.test(controls$stroop_incongruent, mild_tin$stroop_incongruent, alternative = "less",var.equal = F)#controls less than mild
+```
+
+```{r tidy control-mild stroop t-test to extract coefficients}
+
+```
+Welch two-sample t-test for the Stroop incongruent response time shows that...
+
+####Errors
+```{r t-test control-mild stroop errors}
+t.test(controls$stroop_errors, mild_tin$stroop_errors, alternative = "less",var.equal = F)#controls less than mild
+```
+
+```{r tidy control-mild stroop errors t-test to extract coefficients}
+
+```
+Welch two-sample t-test for the Stroop errors shows that...
+
+###Retrieval-induced forgetting
+```{r t-test control-mild retrieval-induced forgetting}
+t.test(controls$RIF_Diff, mild_tin$RIF_Diff, alternative = "greater",var.equal = F)#controls greater than mild
+```
+
+```{r tidy control-mild retrieval-induced forgetting t-test to extract coefficients}
+
+```
+Welch two-sample t-test for the RIF task shows that...
+
+###Rule-switching
+####Switch cost
+```{r control-mild t-test switch cost}
+t.test(controls$switch_cost, mild_tin$switch_cost, alternative = "less",var.equal = F)#controls less than mild
+```
+
+```{r tidy control-mild switch cost t-test to extract coefficients}
+
+```
+Welch two-sample t-test for the switch cost shows that...
+
+####Errors
+```{r control-mild t-test rule-switching errors}
+t.test(controls$rule_errors, mild_tin$rule_errors, alternative = "less",var.equal = F)#controls less than mild
+```
+
+```{r tidy control-mild rule-switching errors t-test to extract coefficients}
+
+```
+Welch two-sample t-test for rule-switching errors shows that..
+
+
+###Dual task
+```{r t-test control-mild dual task}
+t.test(controls$dual_task_total, mild_tin$dual_task_total, alternative = "greater",var.equal = F)#controls greater than mild
+```
+
+```{r tidy control-mild dual task t-test to extract coefficients}
+
+```
+Welch two-sample t-test for the dual task shows that...
+
+###Matrix reasoning
+
+```{r control-mild t-test matrix reasoning}
+t.test(controls$matrixReason, mild_tin$matrixReason, alternative = "greater",var.equal = F)#controls greater than mild
+```
+
+```{r tidy control-mild matrix reasoning t-test to extract coefficients}
+
+```
+Welch two-sample t-test for the matrix reasoning task shows that...
+
+##Controls and Modsev
+###Number-letter sequencing
+```{r control-modsev t-test letter-number sequencing}
+t.test(controls$nls_correct, modsev_tin$nls_correct, alternative = "greater",var.equal = F)#controls greater than modsev
+```
+
+```{r tidy control-modsev letter-number sequencing t-test to extract coefficients}
+
+```
+Welch two-sample t-test for number-letter sequencing task shows that...
+
+###Keep-track
+```{r control-modsev t-test keep-track}
+t.test(controls$keepTrack, modsev_tin$keepTrack, alternative = "greater",var.equal = F)#controls greater than modsev
+```
+
+```{r tidy control-modsev keep-track t-test to extract coefficients}
+
+```
+Welch two-sample t-test for the keep-track task shows that...
+
+###Stroop
+####Response time (incongruent)
+```{r control-modsev t-test stroop}
+t.test(controls$stroop_incongruent, modsev_tin$stroop_incongruent, alternative = "less",var.equal = F)#controls less than modsev
 ```
 
 ```{r tidy stroop t-test to extract coefficients}
@@ -134,8 +229,8 @@ t.test(controls$stroop_incongruent, mild_tin$stroop_incongruent, alternative = "
 Welch two-sample t-test for the Stroop incongruent response time shows that...
 
 ####Errors
-```{r t-test stroop errors}
-t.test(controls$stroop_errors, mild_tin$stroop_errors, alternative = "less",var.equal = F)#controls less than mild
+```{r control-modsev t-test stroop errors}
+t.test(controls$stroop_errors, modsev_tin$stroop_errors, alternative = "less",var.equal = F)#controls less than modsev
 ```
 
 ```{r tidy stroop errors t-test to extract coefficients}
@@ -144,57 +239,56 @@ t.test(controls$stroop_errors, mild_tin$stroop_errors, alternative = "less",var.
 Welch two-sample t-test for the Stroop errors shows that...
 
 ###Retrieval-induced forgetting
-```{r t-test retrieval-induced forgetting}
-t.test(controls$RIF_Diff, mild_tin$RIF_Diff, alternative = "greater",var.equal = F)#controls greater than mild
+```{r control-modsev t-test retrieval-induced forgetting}
+t.test(controls$RIF_Diff, modsev_tin$RIF_Diff, alternative = "greater",var.equal = F)#controls greater than modsev
 ```
 
-```{r tidy retrieval-induced forgetting t-test to extract coefficients}
+```{r tidy control-modsev retrieval-induced forgetting t-test to extract coefficients}
 
 ```
 Welch two-sample t-test for the RIF task shows that...
 
 ###Rule-switching
 ####Switch cost
-```{r t-test switch cost}
-t.test(controls$switch_cost, mild_tin$switch_cost, alternative = "less",var.equal = F)#controls less than mild
+```{r control-modsev t-test switch cost}
+t.test(controls$switch_cost, modsev_tin$switch_cost, alternative = "less",var.equal = F)#controls less than modsev
 ```
 
-```{r tidy switch cost t-test to extract coefficients}
+```{r tidy control-modsev switch cost t-test to extract coefficients}
 
 ```
 Welch two-sample t-test for the switch cost shows that...
 
 ####Errors
-```{r t-test rule-switching errors}
-t.test(controls$rule_errors, mild_tin$rule_errors, alternative = "less",var.equal = F)#controls less than mild
+```{r control-modsev t-test rule-switching errors}
+t.test(controls$rule_errors, modsev_tin$rule_errors, alternative = "less",var.equal = F)#controls less than modsev
 ```
 
-```{r tidy rule-switching errors t-test to extract coefficients}
+```{r tidy control-modsev rule-switching errors t-test to extract coefficients}
 
 ```
 Welch two-sample t-test for rule-switching errors shows that..
 
 
 ###Dual task
-```{r t-test dual task}
-t.test(controls$dual_task_total, mild_tin$dual_task_total, alternative = "greater",var.equal = F)#controls greater than mild
+```{r control-modsev t-test dual task}
+t.test(controls$dual_task_total, modsev_tin$dual_task_total, alternative = "greater",var.equal = F)#controls greater than modsev
 ```
 
-```{r tidy dual task t-test to extract coefficients}
+```{r tidy control-modsev dual task t-test to extract coefficients}
 
 ```
 Welch two-sample t-test for the dual task shows that...
 
 ###Matrix reasoning
 
-```{r t-test matrix reasoning}
-t.test(controls$matrixReason, mild_tin$matrixReason, alternative = "greater",var.equal = F)#controls greater than mild
+```{r control-modsev t-test matrix reasoning}
+t.test(controls$matrixReason, modsev_tin$matrixReason, alternative = "greater",var.equal = F)#controls greater than modsev
 ```
 
-```{r tidy matrix reasoning t-test to extract coefficients}
+```{r tidy control-modsev matrix reasoning t-test to extract coefficients}
 
 ```
 Welch two-sample t-test for the matrix reasoning task shows that...
 
-##Controls and Modsev
 ##Mild and Modsev
