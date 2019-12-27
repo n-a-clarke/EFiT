@@ -2,7 +2,9 @@
 title: "EFiT Data Analysis"
 author: "N. A. Clarke"
 date: "19 December 2019"
-output: word_document
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
 ---
 
 ```{r setup, include=FALSE}
@@ -83,3 +85,116 @@ RIF <- efit %>%
             Np = mean(pRIF_Np))
 
 ```
+##Group counts
+`r knitr::kable(groupCount)`
+
+##Group ages
+`r knitr::kable(groupAge)`
+
+#T-tests
+```{r filtered data frames of different groups}
+#filter by groups for statistical tests
+controls <- efit %>% 
+  filter(THI_cat == "none")
+mild_tin <- efit %>% 
+  filter(THI_cat == "mild")
+modsev_tin <- efit %>% 
+  filter(THI_cat == "modsev")
+```
+##Controls and Mild
+###Number-letter sequencing
+```{r t-test letter-number sequencing}
+t.test(controls$nls_correct, mild_tin$nls_correct, alternative = "greater",var.equal = F)#controls greater than mild
+```
+
+```{r tidy letter-number sequencing t-test to extract coefficients}
+
+```
+Welch two-sample t-test for number-letter sequencing task shows that...
+
+###Keep-track
+```{r t-test keep-track}
+t.test(controls$keepTrack, mild_tin$keepTrack, alternative = "greater",var.equal = F)#controls greater than mild
+```
+
+```{r tidy keep-track t-test to extract coefficients}
+
+```
+Welch two-sample t-test for the keep-track task shows that...
+
+###Stroop
+####Response time (incongruent)
+```{r t-test stroop}
+t.test(controls$stroop_incongruent, mild_tin$stroop_incongruent, alternative = "less",var.equal = F)#controls less than mild
+```
+
+```{r tidy stroop t-test to extract coefficients}
+
+```
+Welch two-sample t-test for the Stroop incongruent response time shows that...
+
+####Errors
+```{r t-test stroop errors}
+t.test(controls$stroop_errors, mild_tin$stroop_errors, alternative = "less",var.equal = F)#controls less than mild
+```
+
+```{r tidy stroop errors t-test to extract coefficients}
+
+```
+Welch two-sample t-test for the Stroop errors shows that...
+
+###Retrieval-induced forgetting
+```{r t-test retrieval-induced forgetting}
+t.test(controls$RIF_Diff, mild_tin$RIF_Diff, alternative = "greater",var.equal = F)#controls greater than mild
+```
+
+```{r tidy retrieval-induced forgetting t-test to extract coefficients}
+
+```
+Welch two-sample t-test for the RIF task shows that...
+
+###Rule-switching
+####Switch cost
+```{r t-test switch cost}
+t.test(controls$switch_cost, mild_tin$switch_cost, alternative = "less",var.equal = F)#controls less than mild
+```
+
+```{r tidy switch cost t-test to extract coefficients}
+
+```
+Welch two-sample t-test for the switch cost shows that...
+
+####Errors
+```{r t-test rule-switching errors}
+t.test(controls$rule_errors, mild_tin$rule_errors, alternative = "less",var.equal = F)#controls less than mild
+```
+
+```{r tidy rule-switching errors t-test to extract coefficients}
+
+```
+Welch two-sample t-test for rule-switching errors shows that..
+
+
+###Dual task
+```{r t-test dual task}
+t.test(controls$dual_task_total, mild_tin$dual_task_total, alternative = "greater",var.equal = F)#controls greater than mild
+```
+
+```{r tidy dual task t-test to extract coefficients}
+
+```
+Welch two-sample t-test for the dual task shows that...
+
+###Matrix reasoning
+
+```{r t-test matrix reasoning}
+t.test(controls$matrixReason, mild_tin$matrixReason, alternative = "greater",var.equal = F)#controls greater than mild
+```
+
+```{r tidy matrix reasoning t-test to extract coefficients}
+
+```
+Welch two-sample t-test for the matrix reasoning task shows that...
+
+##Controls and Modsev
+##Mild and Modsev
