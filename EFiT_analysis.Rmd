@@ -2,9 +2,7 @@
 title: "EFiT Data Analysis"
 author: "N. A. Clarke"
 date: "19 December 2019"
-output: html_notebook
-editor_options: 
-  chunk_output_type: inline
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
@@ -106,292 +104,376 @@ modsev_tin <- efit %>%
 ###Number-letter sequencing
 ```{r t-test control-mild letter-number sequencing}
 nls_control_mild_t.test <- t.test(controls$nls_correct, mild_tin$nls_correct, alternative = "greater",var.equal = F)#controls greater than mild
+
 ```
 
 ```{r tidy control-mild letter-number sequencing t-test to extract coefficients}
 nls_control_mild_t.test_tidy <- tidy(nls_control_mild_t.test)
+
+nls_control_mild_t.test_tidy <- nls_control_mild_t.test_tidy %>% 
+  mutate(task = "number_letter_sequencing", groups = "control_mild")
 ```
-Welch two-sample t-test for number-letter sequencing task shows that...
 
 ###Keep-track
 ```{r t-test control-mild keep-track}
-t.test(controls$keepTrack, mild_tin$keepTrack, alternative = "greater",var.equal = F)#controls greater than mild
+keeptrack_control_mild_t.test <- t.test(controls$keepTrack, mild_tin$keepTrack, alternative = "greater",var.equal = F)#controls greater than mild
 ```
 
 ```{r tidy control-mild keep-track t-test to extract coefficients}
+keeptrack_control_mild_t.test_tidy <- tidy(keeptrack_control_mild_t.test)
 
+keeptrack_control_mild_t.test_tidy <- keeptrack_control_mild_t.test_tidy %>% 
+  mutate(task = "keeptrack", groups = "control_mild")
 ```
-Welch two-sample t-test for the keep-track task shows that...
 
 ###Stroop
 ####Response time (incongruent)
 ```{r t-test control-mild stroop}
-t.test(controls$stroop_incongruent, mild_tin$stroop_incongruent, alternative = "less",var.equal = F)#controls less than mild
+stroopRT_control_mild_t.test <- t.test(controls$stroop_incongruent, mild_tin$stroop_incongruent, alternative = "less",var.equal = F)#controls less than mild
 ```
 
 ```{r tidy control-mild stroop t-test to extract coefficients}
+stroopRT_control_mild_t.test_tidy <- tidy(stroopRT_control_mild_t.test)
 
+stroopRT_control_mild_t.test_tidy <- stroopRT_control_mild_t.test_tidy %>% 
+  mutate(task = "stroop_rt", groups = "control_mild")
 ```
-Welch two-sample t-test for the Stroop incongruent response time shows that...
 
 ####Errors
 ```{r t-test control-mild stroop errors}
-t.test(controls$stroop_errors, mild_tin$stroop_errors, alternative = "less",var.equal = F)#controls less than mild
+stroopErr_control_mild_t.test <- t.test(controls$stroop_errors, mild_tin$stroop_errors, alternative = "less",var.equal = F)#controls less than mild
 ```
 
 ```{r tidy control-mild stroop errors t-test to extract coefficients}
+stroopErr_control_mild_t.test_tidy <- tidy(stroopErr_control_mild_t.test) 
 
+stroopErr_control_mild_t.test_tidy <- stroopErr_control_mild_t.test_tidy %>% 
+  mutate(task = "stroop_errors", groups = "control_mild")
 ```
-Welch two-sample t-test for the Stroop errors shows that...
 
 ###Retrieval-induced forgetting
 ```{r t-test control-mild retrieval-induced forgetting}
-t.test(controls$RIF_Diff, mild_tin$RIF_Diff, alternative = "greater",var.equal = F)#controls greater than mild
+RIFdiff_control_mild_t.test <- t.test(controls$RIF_Diff, mild_tin$RIF_Diff, alternative = "greater",var.equal = F)#controls greater than mild
 ```
 
 ```{r tidy control-mild retrieval-induced forgetting t-test to extract coefficients}
+RIFdiff_control_mild_t.test_tidy <- tidy(RIFdiff_control_mild_t.test) 
 
+RIFdiff_control_mild_t.test_tidy <- RIFdiff_control_mild_t.test_tidy %>% 
+  mutate(task = "RIF_diff", groups = "control_mild")
 ```
-Welch two-sample t-test for the RIF task shows that...
 
 ###Rule-switching
 ####Switch cost
 ```{r control-mild t-test switch cost}
-t.test(controls$switch_cost, mild_tin$switch_cost, alternative = "less",var.equal = F)#controls less than mild
+switchcost_control_mild_t.test <- t.test(controls$switch_cost, mild_tin$switch_cost, alternative = "less",var.equal = F)#controls less than mild
 ```
 
 ```{r tidy control-mild switch cost t-test to extract coefficients}
+switchcost_control_mild_t.test_tidy <- tidy(switchcost_control_mild_t.test) 
 
+switchcost_control_mild_t.test_tidy <- switchcost_control_mild_t.test_tidy %>% 
+  mutate(task = "switch_cost", groups = "control_mild")
 ```
-Welch two-sample t-test for the switch cost shows that...
 
 ####Errors
 ```{r control-mild t-test rule-switching errors}
-t.test(controls$rule_errors, mild_tin$rule_errors, alternative = "less",var.equal = F)#controls less than mild
+switchErr_control_mild_t.test <- t.test(controls$rule_errors, mild_tin$rule_errors, alternative = "less",var.equal = F)#controls less than mild
 ```
 
 ```{r tidy control-mild rule-switching errors t-test to extract coefficients}
+switchErr_control_mild_t.test_tidy <- tidy(switchErr_control_mild_t.test) 
 
+switchErr_control_mild_t.test_tidy <- switchErr_control_mild_t.test_tidy %>% 
+  mutate(task = "switch_errors", groups = "control_mild")
 ```
-Welch two-sample t-test for rule-switching errors shows that..
-
 
 ###Dual task
 ```{r t-test control-mild dual task}
-t.test(controls$dual_task_total, mild_tin$dual_task_total, alternative = "greater",var.equal = F)#controls greater than mild
+dualtask_control_mild_t.test <- t.test(controls$dual_task_total, mild_tin$dual_task_total, alternative = "greater",var.equal = F)#controls greater than mild
 ```
 
 ```{r tidy control-mild dual task t-test to extract coefficients}
+dualtask_control_mild_t.test_tidy <- tidy(dualtask_control_mild_t.test) 
 
+dualtask_control_mild_t.test_tidy <- dualtask_control_mild_t.test_tidy %>% 
+  mutate(task = "dual_task", groups = "control_mild")
 ```
-Welch two-sample t-test for the dual task shows that...
 
 ###Matrix reasoning
 
 ```{r control-mild t-test matrix reasoning}
-t.test(controls$matrixReason, mild_tin$matrixReason, alternative = "greater",var.equal = F)#controls greater than mild
+matrix_control_mild_t.test <- t.test(controls$matrixReason, mild_tin$matrixReason, alternative = "greater",var.equal = F)#controls greater than mild
 ```
 
 ```{r tidy control-mild matrix reasoning t-test to extract coefficients}
+matrix_control_mild_t.test_tidy <- tidy(matrix_control_mild_t.test) 
 
+matrix_control_mild_t.test_tidy <- matrix_control_mild_t.test_tidy %>% 
+  mutate(task = "matrix_reasoning", groups = "control_mild")
 ```
-Welch two-sample t-test for the matrix reasoning task shows that...
 
 ##Controls and Modsev
 ###Number-letter sequencing
-```{r control-modsev t-test letter-number sequencing}
-t.test(controls$nls_correct, modsev_tin$nls_correct, alternative = "greater",var.equal = F)#controls greater than modsev
+```{r t-test control-modsev letter-number sequencing}
+nls_control_modsev_t.test <- t.test(controls$nls_correct, modsev_tin$nls_correct, alternative = "greater",var.equal = F)#controls greater than modsev
+
 ```
 
 ```{r tidy control-modsev letter-number sequencing t-test to extract coefficients}
+nls_control_modsev_t.test_tidy <- tidy(nls_control_modsev_t.test)
 
+nls_control_modsev_t.test_tidy <- nls_control_modsev_t.test_tidy %>% 
+  mutate(task = "number_letter_sequencing", groups = "control_modsev")
 ```
-Welch two-sample t-test for number-letter sequencing task shows that...
 
 ###Keep-track
-```{r control-modsev t-test keep-track}
-t.test(controls$keepTrack, modsev_tin$keepTrack, alternative = "greater",var.equal = F)#controls greater than modsev
+```{r t-test control-modsev keep-track}
+keeptrack_control_modsev_t.test <- t.test(controls$keepTrack, modsev_tin$keepTrack, alternative = "greater",var.equal = F)#controls greater than modsev
 ```
 
 ```{r tidy control-modsev keep-track t-test to extract coefficients}
+keeptrack_control_modsev_t.test_tidy <- tidy(keeptrack_control_modsev_t.test)
 
+keeptrack_control_modsev_t.test_tidy <- keeptrack_control_modsev_t.test_tidy %>% 
+  mutate(task = "keeptrack", groups = "control_modsev")
 ```
-Welch two-sample t-test for the keep-track task shows that...
 
 ###Stroop
 ####Response time (incongruent)
-```{r control-modsev t-test stroop}
-t.test(controls$stroop_incongruent, modsev_tin$stroop_incongruent, alternative = "less",var.equal = F)#controls less than modsev
+```{r t-test control-modsev stroop}
+stroopRT_control_modsev_t.test <- t.test(controls$stroop_incongruent, modsev_tin$stroop_incongruent, alternative = "less",var.equal = F)#controls less than modsev
 ```
 
-```{r tidy stroop t-test to extract coefficients}
+```{r tidy control-modsev stroop t-test to extract coefficients}
+stroopRT_control_modsev_t.test_tidy <- tidy(stroopRT_control_modsev_t.test)
 
+stroopRT_control_modsev_t.test_tidy <- stroopRT_control_modsev_t.test_tidy %>% 
+  mutate(task = "stroop_rt", groups = "control_modsev")
 ```
-Welch two-sample t-test for the Stroop incongruent response time shows that...
 
 ####Errors
-```{r control-modsev t-test stroop errors}
-t.test(controls$stroop_errors, modsev_tin$stroop_errors, alternative = "less",var.equal = F)#controls less than modsev
+```{r t-test control-modsev stroop errors}
+stroopErr_control_modsev_t.test <- t.test(controls$stroop_errors, modsev_tin$stroop_errors, alternative = "less",var.equal = F)#controls less than modsev
 ```
 
-```{r tidy stroop errors t-test to extract coefficients}
+```{r tidy control-modsev stroop errors t-test to extract coefficients}
+stroopErr_control_modsev_t.test_tidy <- tidy(stroopErr_control_modsev_t.test) 
 
+stroopErr_control_modsev_t.test_tidy <- stroopErr_control_modsev_t.test_tidy %>% 
+  mutate(task = "stroop_errors", groups = "control_modsev")
 ```
-Welch two-sample t-test for the Stroop errors shows that...
 
 ###Retrieval-induced forgetting
-```{r control-modsev t-test retrieval-induced forgetting}
-t.test(controls$RIF_Diff, modsev_tin$RIF_Diff, alternative = "greater",var.equal = F)#controls greater than modsev
+```{r t-test control-modsev retrieval-induced forgetting}
+RIFdiff_control_modsev_t.test <- t.test(controls$RIF_Diff, modsev_tin$RIF_Diff, alternative = "greater",var.equal = F)#controls greater than modsev
 ```
 
 ```{r tidy control-modsev retrieval-induced forgetting t-test to extract coefficients}
+RIFdiff_control_modsev_t.test_tidy <- tidy(RIFdiff_control_modsev_t.test) 
 
+RIFdiff_control_modsev_t.test_tidy <- RIFdiff_control_modsev_t.test_tidy %>% 
+  mutate(task = "RIF_diff", groups = "control_modsev")
 ```
-Welch two-sample t-test for the RIF task shows that...
 
 ###Rule-switching
 ####Switch cost
 ```{r control-modsev t-test switch cost}
-t.test(controls$switch_cost, modsev_tin$switch_cost, alternative = "less",var.equal = F)#controls less than modsev
+switchcost_control_modsev_t.test <- t.test(controls$switch_cost, modsev_tin$switch_cost, alternative = "less",var.equal = F)#controls less than modsev
 ```
 
 ```{r tidy control-modsev switch cost t-test to extract coefficients}
+switchcost_control_modsev_t.test_tidy <- tidy(switchcost_control_modsev_t.test) 
 
+switchcost_control_modsev_t.test_tidy <- switchcost_control_modsev_t.test_tidy %>% 
+  mutate(task = "switch_cost", groups = "control_modsev")
 ```
-Welch two-sample t-test for the switch cost shows that...
 
 ####Errors
 ```{r control-modsev t-test rule-switching errors}
-t.test(controls$rule_errors, modsev_tin$rule_errors, alternative = "less",var.equal = F)#controls less than modsev
+switchErr_control_modsev_t.test <- t.test(controls$rule_errors, modsev_tin$rule_errors, alternative = "less",var.equal = F)#controls less than modsev
 ```
 
 ```{r tidy control-modsev rule-switching errors t-test to extract coefficients}
+switchErr_control_modsev_t.test_tidy <- tidy(switchErr_control_modsev_t.test) 
 
+switchErr_control_modsev_t.test_tidy <- switchErr_control_modsev_t.test_tidy %>% 
+  mutate(task = "switch_errors", groups = "control_modsev")
 ```
-Welch two-sample t-test for rule-switching errors shows that..
-
 
 ###Dual task
-```{r control-modsev t-test dual task}
-t.test(controls$dual_task_total, modsev_tin$dual_task_total, alternative = "greater",var.equal = F)#controls greater than modsev
+```{r t-test control-modsev dual task}
+dualtask_control_modsev_t.test <- t.test(controls$dual_task_total, modsev_tin$dual_task_total, alternative = "greater",var.equal = F)#controls greater than modsev
 ```
 
 ```{r tidy control-modsev dual task t-test to extract coefficients}
+dualtask_control_modsev_t.test_tidy <- tidy(dualtask_control_modsev_t.test) 
 
+dualtask_control_modsev_t.test_tidy <- dualtask_control_modsev_t.test_tidy %>% 
+  mutate(task = "dual_task", groups = "control_modsev")
 ```
-Welch two-sample t-test for the dual task shows that...
 
 ###Matrix reasoning
-
 ```{r control-modsev t-test matrix reasoning}
-t.test(controls$matrixReason, modsev_tin$matrixReason, alternative = "greater",var.equal = F)#controls greater than modsev
+matrix_control_modsev_t.test <- t.test(controls$matrixReason, modsev_tin$matrixReason, alternative = "greater",var.equal = F)#controls greater than modsev
 ```
 
 ```{r tidy control-modsev matrix reasoning t-test to extract coefficients}
+matrix_control_modsev_t.test_tidy <- tidy(matrix_control_modsev_t.test) 
 
+matrix_control_modsev_t.test_tidy <- matrix_control_modsev_t.test_tidy %>% 
+  mutate(task = "matrix_reasoning", groups = "control_modsev")
 ```
-Welch two-sample t-test for the matrix reasoning task shows that...
 
 ##Mild and Modsev
 ###Number-letter sequencing
 ```{r t-test mild-modsev letter-number sequencing}
 nls_mild_modsev_t.test <- t.test(mild_tin$nls_correct, modsev_tin$nls_correct, alternative = "greater",var.equal = F)#mild greater than modsev
+
 ```
 
 ```{r tidy mild-modsev letter-number sequencing t-test to extract coefficients}
-nls_mild_modsev_t.test_tidy <- tidy(nls_control_mild_t.test)
+nls_mild_modsev_t.test_tidy <- tidy(nls_mild_modsev_t.test)
+
+nls_mild_modsev_t.test_tidy <- nls_mild_modsev_t.test_tidy %>% 
+  mutate(task = "number_letter_sequencing", groups = "mild_modsev")
 ```
-Welch two-sample t-test for number-letter sequencing task shows that...
 
 ###Keep-track
 ```{r t-test mild-modsev keep-track}
-t.test(mild_tin$keepTrack, modsev_tin$keepTrack, alternative = "greater",var.equal = F)#mild greater than modsev
+keeptrack_mild_modsev_t.test <- t.test(mild_tin$keepTrack, modsev_tin$keepTrack, alternative = "greater",var.equal = F)#milds greater than modsev
 ```
 
 ```{r tidy mild-modsev keep-track t-test to extract coefficients}
+keeptrack_mild_modsev_t.test_tidy <- tidy(keeptrack_mild_modsev_t.test)
 
+keeptrack_mild_modsev_t.test_tidy <- keeptrack_mild_modsev_t.test_tidy %>% 
+  mutate(task = "keeptrack", groups = "mild_modsev")
 ```
-Welch two-sample t-test for the keep-track task shows that...
 
 ###Stroop
 ####Response time (incongruent)
 ```{r t-test mild-modsev stroop}
-t.test(mild_tin$stroop_incongruent, modsev_tin$stroop_incongruent, alternative = "less",var.equal = F)#mild less than modsev
+stroopRT_mild_modsev_t.test <- t.test(mild_tin$stroop_incongruent, modsev_tin$stroop_incongruent, alternative = "less",var.equal = F)#milds less than modsev
 ```
 
 ```{r tidy mild-modsev stroop t-test to extract coefficients}
+stroopRT_mild_modsev_t.test_tidy <- tidy(stroopRT_mild_modsev_t.test)
 
+stroopRT_mild_modsev_t.test_tidy <- stroopRT_mild_modsev_t.test_tidy %>% 
+  mutate(task = "stroop_rt", groups = "mild_modsev")
 ```
-Welch two-sample t-test for the Stroop incongruent response time shows that...
 
 ####Errors
 ```{r t-test mild-modsev stroop errors}
-t.test(mild_tin$stroop_errors, modsev_tin$stroop_errors, alternative = "less",var.equal = F)#mild less than modsev
+stroopErr_mild_modsev_t.test <- t.test(mild_tin$stroop_errors, modsev_tin$stroop_errors, alternative = "less",var.equal = F)#milds less than modsev
 ```
 
 ```{r tidy mild-modsev stroop errors t-test to extract coefficients}
+stroopErr_mild_modsev_t.test_tidy <- tidy(stroopErr_mild_modsev_t.test) 
 
+stroopErr_mild_modsev_t.test_tidy <- stroopErr_mild_modsev_t.test_tidy %>% 
+  mutate(task = "stroop_errors", groups = "mild_modsev")
 ```
-Welch two-sample t-test for the Stroop errors shows that...
 
 ###Retrieval-induced forgetting
 ```{r t-test mild-modsev retrieval-induced forgetting}
-t.test(mild_tin$RIF_Diff, modsev_tin$RIF_Diff, alternative = "greater",var.equal = F)#mild greater than modsev
+RIFdiff_mild_modsev_t.test <- t.test(mild_tin$RIF_Diff, modsev_tin$RIF_Diff, alternative = "greater",var.equal = F)#milds greater than modsev
 ```
 
 ```{r tidy mild-modsev retrieval-induced forgetting t-test to extract coefficients}
+RIFdiff_mild_modsev_t.test_tidy <- tidy(RIFdiff_mild_modsev_t.test) 
 
+RIFdiff_mild_modsev_t.test_tidy <- RIFdiff_mild_modsev_t.test_tidy %>% 
+  mutate(task = "RIF_diff", groups = "mild_modsev")
 ```
-Welch two-sample t-test for the RIF task shows that...
 
 ###Rule-switching
 ####Switch cost
 ```{r mild-modsev t-test switch cost}
-t.test(mild_tin$switch_cost, modsev_tin$switch_cost, alternative = "less",var.equal = F)#mild less than modsev
+switchcost_mild_modsev_t.test <- t.test(mild_tin$switch_cost, modsev_tin$switch_cost, alternative = "less",var.equal = F)#milds less than modsev
 ```
 
 ```{r tidy mild-modsev switch cost t-test to extract coefficients}
+switchcost_mild_modsev_t.test_tidy <- tidy(switchcost_mild_modsev_t.test) 
 
+switchcost_mild_modsev_t.test_tidy <- switchcost_mild_modsev_t.test_tidy %>% 
+  mutate(task = "switch_cost", groups = "mild_modsev")
 ```
-Welch two-sample t-test for the switch cost shows that...
 
 ####Errors
 ```{r mild-modsev t-test rule-switching errors}
-t.test(mild_tin$rule_errors, modsev_tin$rule_errors, alternative = "less",var.equal = F)#mild less than modsev
+switchErr_mild_modsev_t.test <- t.test(mild_tin$rule_errors, modsev_tin$rule_errors, alternative = "less",var.equal = F)#milds less than modsev
 ```
 
 ```{r tidy mild-modsev rule-switching errors t-test to extract coefficients}
+switchErr_mild_modsev_t.test_tidy <- tidy(switchErr_mild_modsev_t.test) 
 
+switchErr_mild_modsev_t.test_tidy <- switchErr_mild_modsev_t.test_tidy %>% 
+  mutate(task = "switch_errors", groups = "mild_modsev")
 ```
-Welch two-sample t-test for rule-switching errors shows that..
-
 
 ###Dual task
 ```{r t-test mild-modsev dual task}
-t.test(mild_tin$dual_task_total, modsev_tin$dual_task_total, alternative = "greater",var.equal = F)#mild greater than modsev
+dualtask_mild_modsev_t.test <- t.test(mild_tin$dual_task_total, modsev_tin$dual_task_total, alternative = "greater",var.equal = F)#milds greater than modsev
 ```
 
 ```{r tidy mild-modsev dual task t-test to extract coefficients}
+dualtask_mild_modsev_t.test_tidy <- tidy(dualtask_mild_modsev_t.test) 
 
+dualtask_mild_modsev_t.test_tidy <- dualtask_mild_modsev_t.test_tidy %>% 
+  mutate(task = "dual_task", groups = "mild_modsev")
 ```
-Welch two-sample t-test for the dual task shows that...
 
 ###Matrix reasoning
-
 ```{r mild-modsev t-test matrix reasoning}
-t.test(mild_tin$matrixReason, modsev_tin$matrixReason, alternative = "greater",var.equal = F)#mild greater than modsev
+matrix_mild_modsev_t.test <- t.test(mild_tin$matrixReason, modsev_tin$matrixReason, alternative = "greater",var.equal = F)#milds greater than modsev
 ```
 
 ```{r tidy mild-modsev matrix reasoning t-test to extract coefficients}
+matrix_mild_modsev_t.test_tidy <- tidy(matrix_mild_modsev_t.test) 
 
+matrix_mild_modsev_t.test_tidy <- matrix_mild_modsev_t.test_tidy %>% 
+  mutate(task = "matrix_reasoning", groups = "mild_modsev")
 ```
-Welch two-sample t-test for the matrix reasoning task shows that...
 
 ##Table of t-test results
 ###Controls and Mild
+```{r bind together tidy t.test results of control and milds}
+t.test_table_control_mild <- bind_rows(nls_control_mild_t.test_tidy,
+        keeptrack_control_mild_t.test_tidy,
+        stroopRT_control_mild_t.test_tidy,
+        stroopErr_control_mild_t.test_tidy,
+        RIFdiff_control_mild_t.test_tidy,
+        switchcost_control_mild_t.test_tidy,
+        switchErr_control_mild_t.test_tidy,
+        dualtask_control_mild_t.test_tidy,
+        matrix_control_mild_t.test_tidy)
+```
 ###Controls and Modsev
+```{r bind together tidy t.test results of control and modsev}
+t.test_table_control_modsev <- bind_rows(nls_control_modsev_t.test_tidy,
+        keeptrack_control_modsev_t.test_tidy,
+        stroopRT_control_modsev_t.test_tidy,
+        stroopErr_control_modsev_t.test_tidy,
+        RIFdiff_control_modsev_t.test_tidy,
+        switchcost_control_modsev_t.test_tidy,
+        switchErr_control_modsev_t.test_tidy,
+        dualtask_control_modsev_t.test_tidy,
+        matrix_control_modsev_t.test_tidy)
+```    
 ###Mild and Modsev
-
+```{r bind together tidy t.test results of mild and modsev}
+t.test_table_mild_modsev <- bind_rows(nls_mild_modsev_t.test_tidy,
+        keeptrack_mild_modsev_t.test_tidy,
+        stroopRT_mild_modsev_t.test_tidy,
+        stroopErr_mild_modsev_t.test_tidy,
+        RIFdiff_mild_modsev_t.test_tidy,
+        switchcost_mild_modsev_t.test_tidy,
+        switchErr_mild_modsev_t.test_tidy,
+        dualtask_mild_modsev_t.test_tidy,
+        matrix_mild_modsev_t.test_tidy)
+``` 
 #Cohen's d
 ```{r cohens d}
 
