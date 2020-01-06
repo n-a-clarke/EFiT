@@ -22,6 +22,7 @@ library(cowplot)
 library(ggdag)
 library(readxl)
 library(tidyverse)
+library(lm.beta)
 ```
 
 ```{r load in data file and tidy, warning=FALSE}
@@ -733,3 +734,244 @@ ggplot(aes(x = task, y = cohens_d, colour = group)) +
 ```
 
 #Bayesian t-tests
+```{r bayesian t.test control-mild}
+#Controls vs mild - drop modsev observations for bayesian t-test
+bayes_control_mild <- efit %>% 
+  filter(THI_cat != "modsev") %>% 
+  droplevels()
+
+#bayesian ttest for rule switch task - control vs mild
+control_mild_switch_cost_BF <- BayesFactor::ttestBF(formula = switch_cost ~ THI_cat, data = bayes_control_mild)
+BF_control_mild_switchCost <- describe_posterior(control_mild_switch_cost_BF)
+
+#bayesian ttest for rule switch error - control vs mild
+control_mod_mild_switch_error_BF <- BayesFactor::ttestBF(formula = rule_errors ~ THI_cat, data = bayes_control_mild)
+BF_control_mild_switchError <- describe_posterior(control_mod_mild_switch_error_BF)
+
+#bayesian ttest for stroop response time - control vs mild
+control_mild_stroop_rt_BF <- BayesFactor::ttestBF(formula = stroop_incongruent ~ THI_cat, data = bayes_control_mild)
+BF_control_mild_stroopRT <- describe_posterior(control_mild_stroop_rt_BF)
+
+#bayesian ttest for stroop error count - control vs mild
+control_mild_stroop_error_BF <- BayesFactor::ttestBF(formula = stroop_errors ~ THI_cat, data = bayes_control_mild)
+BF_control_mild_stroopError <- describe_posterior(control_mild_stroop_error_BF)
+
+#bayesian ttest for number letter sequencing - control vs mild
+control_mild_nls_BF <- BayesFactor::ttestBF(formula = nls_correct ~ THI_cat, data = bayes_control_mild)
+BF_control_mild_nls <- describe_posterior(control_mild_nls_BF)
+
+#bayesian ttest for keep track task - control vs mild
+control_mild_keep_BF <- BayesFactor::ttestBF(formula = keepTrack ~ THI_cat, data = bayes_control_modsev)
+BF_control_mild_keep <- describe_posterior(control_mild_keep_BF)
+
+#bayesian ttest for RIF - control vs mild
+control_mild_RIF_BF <- BayesFactor::ttestBF(formula = RIF_Diff ~ THI_cat, data = bayes_control_mild)
+BF_control_mild_RIF <- describe_posterior(control_mild_RIF_BF)
+
+#bayesian ttest for matrix reasoning - control vs mild
+control_mild_matrix_BF <- BayesFactor::ttestBF(formula = matrixReason ~ THI_cat, data = bayes_control_mild)
+BF_control_mild_matrix <- describe_posterior(control_mild_matrix_BF)
+
+#bayesian ttest for dual task - control vs mild
+control_mild_dual_BF <- BayesFactor::ttestBF(formula = dual_task_total ~ THI_cat, data = bayes_control_mild)
+BF_control_mild_dual <- describe_posterior(control_mild_dual_BF)
+
+#bayesian ttest for CFQ - control vs mild
+control_mild_CFQ_BF <- BayesFactor::ttestBF(formula = CFQ ~ THI_cat, data = bayes_control_mild)
+BF_control_mild_CFQ <- describe_posterior(control_mild_CFQ_BF)
+
+#bayesian ttest for RRS - control vs mild
+control_mild_RRS_BF <- BayesFactor::ttestBF(formula = RRS ~ THI_cat, data = bayes_control_mild)
+BF_control_mild_RRS<- describe_posterior(control_mild_RRS_BF)
+
+#bayesian ttest for CRIq_aged - control vs mild
+control_mild_CRIq_aged_BF <- BayesFactor::ttestBF(formula = CRIq_aged ~ THI_cat, data = bayes_control_mild)
+BF_control_mild_CRIq_aged <- describe_posterior(control_mild_CRIq_aged_BF)
+
+#bayesian ttest for depression - control vs mild
+control_mild_depression_BF <- BayesFactor::ttestBF(formula = CRIq_aged ~ THI_cat, data = bayes_control_mild)
+BF_control_mild_depression <- describe_posterior(control_mild_depression_BF)
+
+#bayesian ttest for anxiety - control vs mild
+control_mild_anxiety_BF <- BayesFactor::ttestBF(formula = DASS_A ~ THI_cat, data = bayes_control_mild)
+BF_control_mild_anxiety <- describe_posterior(control_mild_anxiety_BF)
+
+#bayesian ttest for stress - control vs mild
+control_mild_stress_BF <- BayesFactor::ttestBF(formula = DASS_S ~ THI_cat, data = bayes_control_mild)
+BF_control_mild_stress <- describe_posterior(control_mild_stress_BF)
+```
+
+```{r bayesian t.test control-modsev}
+#Controls vs modsev - drop mild observations for bayesian t-test
+bayes_control_modsev <- efit %>% 
+  filter(THI_cat != "mild") %>% 
+  droplevels()
+
+#bayesian ttest for switch cost - control vs modsev
+control_modsev_switch_cost_BF <- BayesFactor::ttestBF(formula = switch_cost ~ THI_cat, data = bayes_control_modsev)  
+BF_control_modsev_switchCost <- describe_posterior(control_modsev_switch_cost_BF)
+
+#bayesian ttest for rule switch error - control vs modsev
+control_modsev_switch_error_BF <- BayesFactor::ttestBF(formula = rule_errors ~ THI_cat, data = bayes_control_modsev)
+BF_control_modsev_switchError <- describe_posterior(control_modsev_switch_error_BF)
+
+#bayesian ttest for stroop response time - control vs modsev
+control_modsev_stroop_rt_BF <- BayesFactor::ttestBF(formula = stroop_incongruent ~ THI_cat, data = bayes_control_modsev)
+BF_control_modsev_stroopRT <- describe_posterior(control_modsev_stroop_rt_BF)
+
+#bayesian ttest for stroop error count - control vs modsev
+control_modsev_stroop_error_BF <- BayesFactor::ttestBF(formula = stroop_errors ~ THI_cat, data = bayes_control_modsev)
+BF_control_modsev_stroopError <- describe_posterior(control_modsev_stroop_error_BF)
+
+#bayesian ttest for number letter sequencing - control vs modsev
+control_modsev_nls_BF <- BayesFactor::ttestBF(formula = nls_correct ~ THI_cat, data = bayes_control_modsev)
+BF_control_modsev_nls <- describe_posterior(control_modsev_nls_BF)
+
+#bayesian ttest for keep track task - control vs modsev
+control_modsev_keep_BF <- BayesFactor::ttestBF(formula = keepTrack ~ THI_cat, data = bayes_control_modsev)
+BF_control_modsev_keep <- describe_posterior(control_modsev_keep_BF)
+
+#bayesian ttest for RIF - control vs modsev
+control_modsev_RIF_BF <- BayesFactor::ttestBF(formula = RIF_Diff ~ THI_cat, data = bayes_control_modsev)
+BF_control_modsev_RIF <- describe_posterior(control_modsev_RIF_BF)
+
+#bayesian ttest for matrix reasoning - control vs modsev
+control_modsev_matrix_BF <- BayesFactor::ttestBF(formula = matrixReason ~ THI_cat, data = bayes_control_modsev)
+BF_control_modsev_matrix <- describe_posterior(control_modsev_matrix_BF)
+
+#bayesian ttest for dual task - control vs modsev
+control_modsev_dual_BF <- BayesFactor::ttestBF(formula = dual_task_total ~ THI_cat, data = bayes_control_modsev)
+BF_control_modsev_dual <- describe_posterior(control_modsev_dual_BF)
+
+#bayesian ttest for CFQ - control vs modsev
+control_modsev_CFQ_BF <- BayesFactor::ttestBF(formula = CFQ ~ THI_cat, data = bayes_control_modsev)
+BF_control_modsev_CFQ <- describe_posterior(control_modsev_CFQ_BF)
+
+#bayesian ttest for RRS - control vs modsev
+control_modsev_RRS_BF <- BayesFactor::ttestBF(formula = RRS ~ THI_cat, data = bayes_control_modsev)
+BF_control_modsev_RRS <- describe_posterior(control_modsev_RRS_BF)
+
+#bayesian ttest for CRIq_aged - control vs modsev
+control_modsev_CRIq_aged_BF <- BayesFactor::ttestBF(formula = CRIq_aged ~ THI_cat, data = bayes_control_modsev)
+BF_control_modsev_CRIq_aged <- describe_posterior(control_modsev_CRIq_aged_BF)
+
+#bayesian ttest for depression - control vs modsev
+control_modsev_depression_BF <- BayesFactor::ttestBF(formula = CRIq_aged ~ THI_cat, data = bayes_control_modsev)
+BF_control_modsev_depression <- describe_posterior(control_modsev_depression_BF)
+
+#bayesian ttest for anxiety - control vs modsev
+control_modsev_anxiety_BF <- BayesFactor::ttestBF(formula = DASS_A ~ THI_cat, data = bayes_control_modsev)
+BF_control_modsev_anxiety <- describe_posterior(control_modsev_anxiety_BF)
+
+#bayesian ttest for stress - control vs modsev
+control_modsev_stress_BF <- BayesFactor::ttestBF(formula = DASS_S ~ THI_cat, data = bayes_control_modsev)
+BF_control_modsev_stress <- describe_posterior(control_modsev_stress_BF)
+```
+
+```{r table of bayes factors for control-mild}
+#create table of bayes factors for control vs mild
+control_mild_BF <- data.frame(
+  c("Retrieval-induced forgetting", 
+    "Number letter sequencing", 
+    "Keep track", 
+    "Matrix reasoning",
+    "Stroop-RT", 
+    "Stroop-errors", 
+    "Switch cost", 
+    "Switch errors", 
+    "Dual task",
+    "CFQ",
+    "RRS",
+    "CRIq_aged",
+    "Depression",
+    "Anxiety",
+    "Stress"),
+  c(BF_control_mild_RIF$BF, 
+    BF_control_mild_nls$BF, 
+    BF_control_mild_keep$BF,
+    BF_control_mild_matrix$BF,
+    BF_control_mild_stroopRT$BF,
+    BF_control_mild_stroopError$BF,
+    BF_control_mild_switchCost$BF,
+    BF_control_mild_switchError$BF,
+    BF_control_mild_dual$BF,
+    BF_control_mild_CFQ$BF,
+    BF_control_mild_RRS$BF,
+    BF_control_mild_CRIq_aged$BF,
+    BF_control_mild_depression$BF,
+    BF_control_mild_anxiety$BF,
+    BF_control_mild_stress$BF)
+)
+colnames(control_mild_BF) <- c("name", "bayes_factor")
+control_mild_BF$bayes_factor <- signif(control_mild_BF$bayes_factor, 2)
+
+control_mild_BF <- control_mild_BF %>% arrange(desc(bayes_factor))
+```
+
+```{r table of bayes factors for control-modsev}
+#bayes factor for control vs modsev
+control_modsev_BF <- data.frame(
+  c("Retrieval-induced forgetting", 
+    "Number letter sequencing", 
+    "Keep track", 
+    "Matrix reasoning",
+    "Stroop-RT", 
+    "Stroop-errors", 
+    "Switch cost", 
+    "Switch errors", 
+    "Dual task",
+    "CFQ",
+    "RRS",
+    "CRIq_aged",
+    "Depression",
+    "Anxiety",
+    "Stress"),
+  c(BF_control_modsev_RIF$BF, 
+    BF_control_modsev_nls$BF, 
+    BF_control_modsev_keep$BF,
+    BF_control_modsev_matrix$BF,
+    BF_control_modsev_stroopRT$BF,
+    BF_control_modsev_stroopError$BF,
+    BF_control_modsev_switchCost$BF,
+    BF_control_modsev_switchError$BF,
+    BF_control_modsev_dual$BF,
+    BF_control_modsev_CFQ$BF,
+    BF_control_modsev_RRS$BF,
+    BF_control_modsev_CRIq_aged$BF,
+    BF_control_modsev_depression$BF,
+    BF_control_modsev_anxiety$BF,
+    BF_control_modsev_stress$BF)
+)
+colnames(control_modsev_BF) <- c("name", "bayes_factor")
+control_modsev_BF$bayes_factor <- signif(control_modsev_BF$bayes_factor, 2)
+
+control_modsev_BF <- control_modsev_BF %>% arrange(desc(bayes_factor))
+```
+#Linear regressions
+##Data preparation
+```{r linear regression data preparation}
+efit$THI_cat <- as.integer(efit$THI_cat)
+
+efit$THI_cat <- as.factor(efit$THI_cat)
+
+```
+
+#Number-letter sequencing
+```{r nls THI groups lm}
+nls_lm_tincats <- lm(formula = nls_correct ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S, data = efit)
+
+nls_lm_tincats.beta <- lm.beta(nls_lm_tincats)
+
+nls_std_beta <- coef(nls_lm_tincats.beta)
+```
+
+#Keep track
+#Stroop
+##RT
+##Errors
+#RIF
+#Rule-switch
+##RT
+##Errors
+#Dual task
+#Matrix reasoning
