@@ -26,8 +26,9 @@ library(lm.beta)
 ```
 
 ```{r load in data file and tidy, warning=FALSE}
-efit <- read_xlsx("EFiT_Main data set_16DEC2019.xlsx") %>% 
-  filter(!partNum == 3, !partNum ==30, !partNum == 79) #remove participants no.3 failed screen, no.30 had to withdraw, no.79 may have unreliable results 
+efit <- read_xlsx("EFiT_Main data set_28FEB2020.xlsx") %>% 
+  filter(!partNum == 3, !partNum ==30, !partNum == 79) %>% 
+  drop_na(CRIq)#remove participants no.3 failed screen, no.30 had to withdraw, no.79 may have unreliable results 
 #select varibles that aren't automatically processed with other scripts
 efit <- efit %>% select(partNum:dualTask_wordsDiff, matrixReason, keepTrack)
 efit <- efit %>% rename(participant = partNum)
@@ -970,49 +971,59 @@ efit$THI_cat <- as.integer(efit$THI_cat)
 
 efit$THI_cat <- as.factor(efit$THI_cat)
 
+efit <- efit %>% 
+  mutate(nls_correct_scaled = scale(nls_correct),
+         keepTrack_scaled = scale(keepTrack),
+         stroop_incongruent_scaled = scale(stroop_incongruent),
+         stroop_errors_scaled = scale(stroop_errors),
+         switch_cost_scaled = scale(switch_cost),
+         rule_errors_scaled = scale(rule_errors),
+         dualTask_wordsDiff_scaled = scale(dualTask_wordsDiff),
+         matrixReason_scale = scale(matrixReason),
+         age_scaled = scale(age),
+         hearThresh_scaled = scale(hearThresh),
+         DASS_A_scaled = scale(DASS_A),
+         DASS_D_scaled = scale(DASS_D),
+         DASS_S_scaled = scale(DASS_S)
+         )
+
+
+
 ```
 
 #Number-letter sequencing
 ```{r nls THI groups lm}
 nls_lm_tincats <- lm(formula = nls_correct ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S, data = efit)
 
-nls_lm_tincats.beta <- lm.beta(nls_lm_tincats)
+nls_lm_tincats_scaled <- lm(formula = nls_correct_scaled ~ THI_cat + age_scaled + hearThresh_scaled + DASS_A_scaled + DASS_D_scaled + DASS_S_scaled, data = efit)
 
-nls_std_beta <- coef(nls_lm_tincats.beta)
 ```
 
 #Keep track
 ```{r keeptrack THI groups lm}
 keepTrack_lm_tincats <- lm(formula = keepTrack ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S, data = efit)
 
-keepTrack_lm_tincats.beta <- lm.beta(keepTrack_lm_tincats)
-
-keepTrack_std_beta <- coef(keepTrack_lm_tincats.beta)
+keepTrack_lm_tincats_scaled <- lm(formula = keepTrack_scaled ~ THI_cat + age_scaled + hearThresh_scaled + DASS_A_scaled + DASS_D_scaled + DASS_S_scaled, data = efit)
 ```
 #Stroop
 ##RT
 ```{r stroop incong_rt THI groups lm}
 stroopRT_lm_tincats <- lm(formula = stroop_incongruent ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S, data = efit)
 
-stroopRT_lm_tincats.beta <- lm.beta(stroopRT_lm_tincats)
+stroopRT_lm_tincats_scaled <- lm(formula = stroop_incongruent_scaled ~ THI_cat + age_scaled + hearThresh_scaled + DASS_A_scaled + DASS_D_scaled + DASS_S_scaled, data = efit)
 
-stroopRT_std_beta <- coef(stroopRT_lm_tincats.beta)
 ```
 ##Errors
 ```{r stroop errors THI groups lm}
 stroopErr_lm_tincats <- lm(formula = stroop_errors ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S, data = efit)
 
-stroopeErr_lm_tincats.beta <- lm.beta(stroopErr_lm_tincats)
-
-stroopErr_std_beta <- coef(stroopeErr_lm_tincats.beta)
+stroopErr_lm_tincats_scaled <- lm(formula = stroop_errors_scaled ~ THI_cat + age_scaled + hearThresh_scaled + DASS_A_scaled + DASS_D_scaled + DASS_S_scaled, data = efit)
 ```
 #RIF
 ```{r RIF difference THI groups lm}
 RIF_diff_lm_tincats <- lm(formula = RIF_Diff ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S, data = efit)
 
-RIF_diff_lm_tincats.beta <- lm.beta(RIF_diff_lm_tincats)
-
-RIF_diff_std_beta <- coef(RIF_diff_lm_tincats.beta)
+RIF_diff_lm_tincats_scaled <- lm(formula = RIF_Diff_scaled ~ THI_cat + age_scaled + hearThresh_scaled + DASS_A_scaled + DASS_D_scaled + DASS_S_scaled, data = efit)
 ```
 #Rule-switch
 ##RT
