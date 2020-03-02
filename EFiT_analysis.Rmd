@@ -92,6 +92,18 @@ RIF <- efit %>%
 ##Group ages
 `r knitr::kable(groupAge)`
 
+##Histograms
+```{r historgram age}
+efit %>% ggplot(aes(x = age)) +
+  geom_histogram() +
+  facet_grid(. ~ THI_cat)
+```
+
+```{r historgram THI}
+efit %>% ggplot(aes(x = THI)) +
+  geom_histogram()
+```
+
 #T-tests
 ```{r filtered data frames of different groups}
 #filter by groups for statistical tests
@@ -973,13 +985,14 @@ efit$THI_cat <- as.factor(efit$THI_cat)
 
 efit <- efit %>% 
   mutate(nls_correct_scaled = scale(nls_correct),
+         RIF_Diff_scaled = scale(RIF_Diff),
          keepTrack_scaled = scale(keepTrack),
          stroop_incongruent_scaled = scale(stroop_incongruent),
          stroop_errors_scaled = scale(stroop_errors),
          switch_cost_scaled = scale(switch_cost),
          rule_errors_scaled = scale(rule_errors),
          dualTask_wordsDiff_scaled = scale(dualTask_wordsDiff),
-         matrixReason_scale = scale(matrixReason),
+         matrixReason_scaled = scale(matrixReason),
          age_scaled = scale(age),
          hearThresh_scaled = scale(hearThresh),
          DASS_A_scaled = scale(DASS_A),
@@ -989,13 +1002,22 @@ efit <- efit %>%
 
 
 
+
 ```
 
 #Number-letter sequencing
 ```{r nls THI groups lm}
 nls_lm_tincats <- lm(formula = nls_correct ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S, data = efit)
 
+tidy_nls_lm_tincats <- tidy(nls_lm_tincats)
+
+#create formula for calculating standardised partial regression coefficent to check against the scaled model: sp = b * (sd(IV)/sd(DV))
+#stand_partial <- tidy_nls_lm_tincats$estimate[2]* sd(efit$age)/sd(efit$nls_correct) 
+
+#standardised version of the model
 nls_lm_tincats_scaled <- lm(formula = nls_correct_scaled ~ THI_cat + age_scaled + hearThresh_scaled + DASS_A_scaled + DASS_D_scaled + DASS_S_scaled, data = efit)
+
+tidy_nls_lm_tincats_scaled <- tidy(nls_lm_tincats_scaled)
 
 ```
 
@@ -1003,58 +1025,81 @@ nls_lm_tincats_scaled <- lm(formula = nls_correct_scaled ~ THI_cat + age_scaled 
 ```{r keeptrack THI groups lm}
 keepTrack_lm_tincats <- lm(formula = keepTrack ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S, data = efit)
 
+tidy_keepTrack_lm_tincats <- tidy(keepTrack_lm_tincats)
+
 keepTrack_lm_tincats_scaled <- lm(formula = keepTrack_scaled ~ THI_cat + age_scaled + hearThresh_scaled + DASS_A_scaled + DASS_D_scaled + DASS_S_scaled, data = efit)
+
+tidy_keepTrack_lm_tincats_scaled <- tidy(keepTrack_lm_tincats_scaled)
 ```
 #Stroop
 ##RT
 ```{r stroop incong_rt THI groups lm}
 stroopRT_lm_tincats <- lm(formula = stroop_incongruent ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S, data = efit)
 
+tidy_stroopRT_lm_tincats <- tidy(stroopRT_lm_tincats)
+
 stroopRT_lm_tincats_scaled <- lm(formula = stroop_incongruent_scaled ~ THI_cat + age_scaled + hearThresh_scaled + DASS_A_scaled + DASS_D_scaled + DASS_S_scaled, data = efit)
 
+tidy_stroopRT_lm_tincats_scaled <- tidy(stroopRT_lm_tincats_scaled)
 ```
 ##Errors
 ```{r stroop errors THI groups lm}
 stroopErr_lm_tincats <- lm(formula = stroop_errors ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S, data = efit)
 
+tidy_stroopErr_lm_tincats <- tidy(stroopErr_lm_tincats)
+
 stroopErr_lm_tincats_scaled <- lm(formula = stroop_errors_scaled ~ THI_cat + age_scaled + hearThresh_scaled + DASS_A_scaled + DASS_D_scaled + DASS_S_scaled, data = efit)
+
+tidy_stroopErr_lm_tincats_scaled <- tidy(stroopErr_lm_tincats_scaled)
 ```
 #RIF
 ```{r RIF difference THI groups lm}
 RIF_diff_lm_tincats <- lm(formula = RIF_Diff ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S, data = efit)
 
+tidy_RIF_diff_lm_tincats <- tidy(RIF_diff_lm_tincats)
+
 RIF_diff_lm_tincats_scaled <- lm(formula = RIF_Diff_scaled ~ THI_cat + age_scaled + hearThresh_scaled + DASS_A_scaled + DASS_D_scaled + DASS_S_scaled, data = efit)
+
+tidy_RIF_diff_lm_tincats_scaled <- tidy(RIF_diff_lm_tincats_scaled)
 ```
 #Rule-switch
 ##RT
 ```{r rule switchcost THI groups lm}
 ruleSwitchCost_lm_tincats <- lm(formula = switch_cost ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S, data = efit)
 
-ruleSwitchCost_lm_tincats.beta <- lm.beta(ruleSwitchCost_lm_tincats)
+tidy_ruleSwitchCost_lm_tincats <- tidy(ruleSwitchCost_lm_tincats)
 
-ruleSwitchCost_std_beta <- coef(ruleSwitchCost_lm_tincats.beta)
+ruleSwitchCost_lm_tincats_scaled <- lm(formula = switch_cost_scaled ~ THI_cat + age_scaled + hearThresh_scaled + DASS_A_scaled + DASS_D_scaled + DASS_S_scaled, data = efit)
+
+tidy_ruleSwitchCost_lm_tincats_scaled <- tidy(ruleSwitchCost_lm_tincats_scaled)
 ```
 ##Errors
 ```{r rule errors THI groups lm}
 ruleErr_lm_tincats <- lm(formula = rule_errors ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S, data = efit)
 
-ruleErr_lm_tincats.beta <- lm.beta(ruleErr_lm_tincats)
+tidy_ruleErr_lm_tincats <- tidy(ruleErr_lm_tincats)
 
-ruleErr_std_beta <- coef(ruleErr_lm_tincats.beta)
+ruleErr_lm_tincats_scaled <- lm(formula = rule_errors_scaled ~ THI_cat + age_scaled + hearThresh_scaled + DASS_A_scaled + DASS_D_scaled + DASS_S_scaled, data = efit)
+
+tidy_ruleErr_lm_tincats_scaled <- tidy(ruleErr_lm_tincats_scaled)
 ```
 #Dual task
 ```{r dual task THI groups lm}
-dualTask_lm_tincats <- lm(formula = dual_task_total ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S, data = efit)
+dualTask_lm_tincats <- lm(formula = dualTask_wordsDiff ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S, data = efit)
 
-dualTask_lm_tincats.beta <- lm.beta(dualTask_lm_tincats)
+tidy_dualTask_lm_tincats <- tidy(dualTask_lm_tincats)
 
-dualTask_std_beta <- coef(dualTask_lm_tincats.beta)
+dualTask_lm_tincats_scaled <- lm(formula = dualTask_wordsDiff_scaled ~ THI_cat + age_scaled + hearThresh_scaled + DASS_A_scaled + DASS_D_scaled + DASS_S_scaled, data = efit)
+
+tidy_dualTask_lm_tincats_scaled <- tidy(dualTask_lm_tincats_scaled)
 ```
 #Matrix reasoning
 ```{r matrix reasoning THI groups lm}
 matrixReason_lm_tincats <- lm(formula = matrixReason ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S, data = efit)
 
-matrixReason_lm_tincats.beta <- lm.beta(matrixReason_lm_tincats)
+tidy_matrixReason_lm_tincats <- tidy(matrixReason_lm_tincats)
 
-matrixReason_std_beta <- coef(matrixReason_lm_tincats.beta)
+matrixReason_lm_tincats_scaled <- lm(formula = matrixReason_scaled ~ THI_cat + age_scaled + hearThresh_scaled + DASS_A_scaled + DASS_D_scaled + DASS_S_scaled, data = efit)
+
+tidy_matrixReason_lm_tincats_scaled <- tidy(matrixReason_lm_tincats_scaled)
 ```
