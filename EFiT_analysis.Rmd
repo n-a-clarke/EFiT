@@ -27,8 +27,7 @@ library(lm.beta)
 
 ```{r load in data file and tidy, warning=FALSE}
 efit <- read_xlsx("EFiT_Main data set_28FEB2020.xlsx") %>% 
-  filter(!partNum == 3, !partNum ==30, !partNum == 79) %>% 
-  drop_na(CRIq)#remove participants no.3 failed screen, no.30 had to withdraw, no.79 may have unreliable results 
+  filter(!partNum == 3, !partNum ==30, !partNum == 79) #remove participants no.3 failed screen, no.30 had to withdraw, no.79 may have unreliable results 
 #select varibles that aren't automatically processed with other scripts
 efit <- efit %>% select(partNum:dualTask_wordsDiff, matrixReason, keepTrack)
 efit <- efit %>% rename(participant = partNum)
@@ -1018,6 +1017,11 @@ tidy_nls_lm_tincats <- tidy(nls_lm_tincats)
 nls_lm_tincats_scaled <- lm(formula = nls_correct_scaled ~ THI_cat + age_scaled + hearThresh_scaled + DASS_A_scaled + DASS_D_scaled + DASS_S_scaled, data = efit)
 
 tidy_nls_lm_tincats_scaled <- tidy(nls_lm_tincats_scaled)
+
+ranked_nls_lm_tincats_scaled <- tidy_nls_lm_tincats_scaled %>% 
+  filter(term != "(Intercept)") %>% 
+  mutate(partial_beta_rank = rank(estimate))
+
 
 ```
 
