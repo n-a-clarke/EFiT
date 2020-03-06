@@ -6,7 +6,7 @@ output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, message = FALSE)
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 ```
 
 ```{r load packages}
@@ -16,17 +16,19 @@ library(rstanarm)
 library(bayestestR)
 library(see)
 library(insight)
+library(bayesplot)
 library(psych)
 library(skimr)
 library(cowplot)
 library(ggdag)
 library(readxl)
 library(tidyverse)
-library(lm.beta)
+library(bayesplot)
+library(tidybayes)
 ```
 
 ```{r load in data file and tidy, warning=FALSE}
-efit <- read_xlsx("EFiT_Main data set_28FEB2020.xlsx") %>% 
+efit <- read_xlsx("EFiT_Main data set_5MARCH2020.xlsx") %>% 
   filter(!partNum == 3, !partNum ==30, !partNum == 79) #remove participants no.3 failed screen, no.30 had to withdraw, no.79 may have unreliable results 
 #select varibles that aren't automatically processed with other scripts
 efit <- efit %>% select(partNum:dualTask_wordsDiff, matrixReason, keepTrack)
@@ -99,9 +101,9 @@ efit %>% ggplot(aes(x = age)) +
   facet_grid(. ~ THI_cat)
 ```
 
-```{r historgram THI}
-efit %>% ggplot(aes(x = THI)) +
-  geom_histogram()
+```{r historgram nls}
+efit %>% ggplot(aes(x = matrixReason)) +
+  geom_histogram(bins = 40)
 ```
 
 #T-tests
@@ -1182,7 +1184,8 @@ bothersome_tinnitus_rank
 all_ranked_lm_tincats_scaled %>% 
   filter(task == "rule_switch_cost"|
          task == "rule_switch_errors"|
-         task == "stroop_incongruent_rt") %>% 
+         task == "stroop_incongruent_rt"|
+           task == "dual_task_words_diff") %>% 
   filter(partial_beta_rank == 1 |
            partial_beta_rank == 2) %>% 
   select(task,term, partial_beta_rank, estimate) %>% 
@@ -1207,3 +1210,406 @@ RIF_mean_table$THI_cat <- RIF_mean_table$THI_cat %>%
   str_replace("3", "bothersome_tinnitus")
 ```
 `r knitr::kable(RIF_mean_table)`
+
+Bayesian regressions
+#BAYESIAN LINEAR MODELS
+##Number-letter sequencing
+```{r rstanarm nls THI groups lm}
+bayes_nls_lm_tincats <- stan_glm(formula = nls_correct ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S, data = efit, seed = 12345)#fit standard model
+
+prior_summary(bayes_nls_lm_tincats)#priors used for this model
+
+summary_bayes_nls_lm_tincats <- summary(bayes_nls_lm_tincats) 
+
+
+#standardised version of the model
+bayes_nls_lm_tincats_scaled <- stan_glm(formula = nls_correct_scaled ~ THI_cat + age_scaled + hearThresh_scaled + DASS_A_scaled + DASS_D_scaled + DASS_S_scaled, data = efit, seed = 12345)
+
+summary_bayes_nls_lm_tincats_scaled <- as.data.frame(summary(bayes_nls_lm_tincats_scaled))
+
+summary_bayes_nls_lm_tincats_scaled <- summary_bayes_nls_lm_tincats_scaled %>%
+  rownames_to_column(var = "IV")
+
+rank_bayes_nls_lm_tincats_scaled <- summary_bayes_nls_lm_tincats_scaled %>% 
+  filter(IV == "THI_cat2"|
+         IV == "THI_cat3"|
+         IV == "age_scaled"|
+         IV == "hearThresh_scaled"|
+         IV == "DASS_A_scaled"|
+         IV == "DASS_D_scaled"|
+         IV == "DASS_S_scaled") %>% 
+  mutate(partial_beta_rank = rank(mean),
+         task = "nls_correct") %>% 
+  select(task,IV,mean, partial_beta_rank)
+
+rank_bayes_nls_lm_tincats_scaled$mean <- round(rank_bayes_nls_lm_tincats_scaled$mean, digits = 2)
+
+nls_scaled_posterior_samples <- spread_draws(bayes_nls_lm_tincats_scaled, c(THI_cat3, THI_cat2), seed = 123)
+
+nls_partial_beta_prob_tinnitus <- mean(nls_scaled_posterior_samples$THI_cat2 < 0) %>% round(digits = 2)
+
+nls_partial_beta_prob_bothersome_tinnitus <- mean(nls_scaled_posterior_samples$THI_cat3 < 0) %>% round(digits = 2)
+
+#posterior_samples <- as.matrix(bayes_nls_lm_tincats, pars = "THI_cat3")#extract posterior draws for THI_cat3
+
+#mean(posterior_samples2$THI_cat3 < 0)#tells us the model's probability that draws for this paramater are < 0
+```
+
+##Keep track
+```{r rstanarm keep track THI groups lm}
+bayes_keepTrack_lm_tincats <- stan_glm(formula = keepTrack ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S, data = efit, seed = 12345)#fit standard model
+
+prior_summary(bayes_keepTrack_lm_tincats)#priors used for this model
+
+summary_bayes_keepTrack_lm_tincats <- summary(bayes_keepTrack_lm_tincats) 
+
+
+#standardised version of the model
+bayes_keepTrack_lm_tincats_scaled <- stan_glm(formula = keepTrack_scaled ~ THI_cat + age_scaled + hearThresh_scaled + DASS_A_scaled + DASS_D_scaled + DASS_S_scaled, data = efit, seed = 12345)
+
+summary_bayes_keepTrack_lm_tincats_scaled <- as.data.frame(summary(bayes_keepTrack_lm_tincats_scaled))
+
+summary_bayes_keepTrack_lm_tincats_scaled <- summary_bayes_keepTrack_lm_tincats_scaled %>%
+  rownames_to_column(var = "IV")
+
+rank_bayes_keepTrack_lm_tincats_scaled <- summary_bayes_keepTrack_lm_tincats_scaled %>% 
+  filter(IV == "THI_cat2"|
+         IV == "THI_cat3"|
+         IV == "age_scaled"|
+         IV == "hearThresh_scaled"|
+         IV == "DASS_A_scaled"|
+         IV == "DASS_D_scaled"|
+         IV == "DASS_S_scaled") %>% 
+  mutate(partial_beta_rank = rank(mean),
+         task = "keep_track_correct") %>% 
+  select(task, IV,mean, partial_beta_rank)
+
+rank_bayes_keepTrack_lm_tincats_scaled$mean <- round(rank_bayes_keepTrack_lm_tincats_scaled$mean, digits = 2)
+
+keepTrack_scaled_posterior_samples <- spread_draws(bayes_keepTrack_lm_tincats_scaled, c(THI_cat3, THI_cat2), seed = 123)
+
+keepTrack_partial_beta_prob_tinnitus <- mean(keepTrack_scaled_posterior_samples$THI_cat2 < 0) %>% round(digits = 2)
+
+keepTrack_partial_beta_prob_bothersome_tinnitus <- mean(keepTrack_scaled_posterior_samples$THI_cat3 < 0) %>% round(digits = 2)
+
+#posterior_samples <- as.matrix(bayes_nls_lm_tincats, pars = "THI_cat3")#extract posterior draws for THI_cat3
+```
+
+##Stroop
+###RT
+```{r rstanarm stroop_incong rt THI groups lm}
+bayes_stroopRT_lm_tincats <- stan_glm(formula = stroop_incongruent ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S, data = efit, seed = 12345)#fit standard model
+
+prior_summary(bayes_stroopRT_lm_tincats)#priors used for this model
+
+summary_bayes_stroopRT_lm_tincats <- summary(bayes_stroopRT_lm_tincats) 
+
+
+#standardised version of the model
+bayes_stroopRT_lm_tincats_scaled <- stan_glm(formula = stroop_incongruent_scaled ~ THI_cat + age_scaled + hearThresh_scaled + DASS_A_scaled + DASS_D_scaled + DASS_S_scaled, data = efit, seed = 12345)
+
+summary_bayes_stroopRT_lm_tincats_scaled <- as.data.frame(summary(bayes_stroopRT_lm_tincats_scaled))
+
+summary_bayes_stroopRT_lm_tincats_scaled <- summary_bayes_stroopRT_lm_tincats_scaled %>%
+  rownames_to_column(var = "IV")
+
+rank_bayes_stroopRT_lm_tincats_scaled <- summary_bayes_stroopRT_lm_tincats_scaled %>% 
+  filter(IV == "THI_cat2"|
+         IV == "THI_cat3"|
+         IV == "age_scaled"|
+         IV == "hearThresh_scaled"|
+         IV == "DASS_A_scaled"|
+         IV == "DASS_D_scaled"|
+         IV == "DASS_S_scaled") %>% 
+  mutate(partial_beta_rank = rank(-mean),
+         task = "stroop_rt") %>% 
+  select(task,IV,mean, partial_beta_rank)#USE -mean() for rt and errors
+
+rank_bayes_stroopRT_lm_tincats_scaled$mean <- round(rank_bayes_stroopRT_lm_tincats_scaled$mean, digits = 2)
+
+stroopRT_scaled_posterior_samples <- spread_draws(bayes_stroopRT_lm_tincats_scaled, c(THI_cat3, THI_cat2), seed = 123)
+
+stroopRT_partial_beta_prob_tinnitus <- mean(stroopRT_scaled_posterior_samples$THI_cat2 > 0) %>% round(digits = 2)
+
+stroopRT_partial_beta_prob_bothersome_tinnitus <- mean(stroopRT_scaled_posterior_samples$THI_cat3 > 0) %>% round(digits = 2)
+
+#posterior_samples <- as.matrix(bayes_nls_lm_tincats, pars = "THI_cat3")#extract posterior draws for THI_cat3
+```
+
+###Errors
+```{r rstanarm stroop error THI groups lm}
+bayes_stroopErr_lm_tincats <- stan_glm(formula = stroop_errors ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S, data = efit,seed = 12345)#fit standard model
+
+prior_summary(bayes_stroopErr_lm_tincats)#priors used for this model
+
+summary_bayes_stroopErr_lm_tincats <- summary(bayes_stroopErr_lm_tincats) 
+
+
+#standardised version of the model
+bayes_stroopErr_lm_tincats_scaled <- stan_glm(formula = stroop_errors_scaled ~ THI_cat + age_scaled + hearThresh_scaled + DASS_A_scaled + DASS_D_scaled + DASS_S_scaled, data = efit, seed = 12345)
+
+summary_bayes_stroopErr_lm_tincats_scaled <- as.data.frame(summary(bayes_stroopErr_lm_tincats_scaled))
+
+summary_bayes_stroopErr_lm_tincats_scaled <- summary_bayes_stroopErr_lm_tincats_scaled %>%
+  rownames_to_column(var = "IV")
+
+rank_bayes_stroopErr_lm_tincats_scaled <- summary_bayes_stroopErr_lm_tincats_scaled %>% 
+  filter(IV == "THI_cat2"|
+         IV == "THI_cat3"|
+         IV == "age_scaled"|
+         IV == "hearThresh_scaled"|
+         IV == "DASS_A_scaled"|
+         IV == "DASS_D_scaled"|
+         IV == "DASS_S_scaled") %>% 
+  mutate(partial_beta_rank = rank(-mean),
+         task = "stroop_errors") %>% 
+  select(task,IV,mean, partial_beta_rank)#USE -mean() for rt and errors
+
+rank_bayes_stroopErr_lm_tincats_scaled$mean <- round(rank_bayes_stroopErr_lm_tincats_scaled$mean, digits = 2)
+
+stroopErr_scaled_posterior_samples <- spread_draws(bayes_stroopErr_lm_tincats_scaled, c(THI_cat3, THI_cat2), seed = 123)
+
+stroopErr_partial_beta_prob_tinnitus <- mean(stroopErr_scaled_posterior_samples$THI_cat2 > 0) %>% round(digits = 2)
+
+stroopErr_partial_beta_prob_bothersome_tinnitus <- mean(stroopErr_scaled_posterior_samples$THI_cat3 > 0) %>% round(digits = 2)
+
+#posterior_samples <- as.matrix(bayes_nls_lm_tincats, pars = "THI_cat3")#extract posterior draws for THI_cat3
+```
+
+##RIF effect
+```{r rstanarm RIF_Diff error THI groups lm}
+bayes_RIF_Diff_lm_tincats <- stan_glm(formula = RIF_Diff ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S, data = efit, seed = 12345)#fit standard model
+
+prior_summary(bayes_RIF_Diff_lm_tincats)#priors used for this model
+
+summary_bayes_RIF_Diff_lm_tincats <- summary(bayes_RIF_Diff_lm_tincats) 
+
+
+#standardised version of the model
+bayes_RIF_Diff_lm_tincats_scaled <- stan_glm(formula = RIF_Diff_scaled ~ THI_cat + age_scaled + hearThresh_scaled + DASS_A_scaled + DASS_D_scaled + DASS_S_scaled, data = efit,seed = 12345)
+
+summary_bayes_RIF_Diff_lm_tincats_scaled <- as.data.frame(summary(bayes_RIF_Diff_lm_tincats_scaled))
+
+summary_bayes_RIF_Diff_lm_tincats_scaled <- summary_bayes_RIF_Diff_lm_tincats_scaled %>%
+  rownames_to_column(var = "IV")
+
+rank_bayes_RIF_Diff_lm_tincats_scaled <- summary_bayes_RIF_Diff_lm_tincats_scaled %>% 
+  filter(IV == "THI_cat2"|
+         IV == "THI_cat3"|
+         IV == "age_scaled"|
+         IV == "hearThresh_scaled"|
+         IV == "DASS_A_scaled"|
+         IV == "DASS_D_scaled"|
+         IV == "DASS_S_scaled") %>% 
+  mutate(partial_beta_rank = rank(mean),
+         task = "RIF_effect") %>% 
+  select(task, IV,mean, partial_beta_rank)
+
+rank_bayes_RIF_Diff_lm_tincats_scaled$mean <- round(rank_bayes_RIF_Diff_lm_tincats_scaled$mean, digits = 2)
+
+RIF_Diff_scaled_posterior_samples <- spread_draws(bayes_RIF_Diff_lm_tincats_scaled, c(THI_cat3, THI_cat2), seed = 123)
+
+RIF_Diff_partial_beta_prob_tinnitus <- mean(RIF_Diff_scaled_posterior_samples$THI_cat2 < 0) %>% round(digits = 2)
+
+RIF_Diff_partial_beta_prob_bothersome_tinnitus <- mean(RIF_Diff_scaled_posterior_samples$THI_cat3 < 0) %>% round(digits = 2)
+
+#posterior_samples <- as.matrix(bayes_nls_lm_tincats, pars = "THI_cat3")#extract posterior draws for THI_cat3
+```
+
+##Rule switch
+###RT
+```{r rstanarm switch_cost rt THI groups lm}
+bayes_switchCost_lm_tincats <- stan_glm(formula = switch_cost ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S, data = efit, seed = 12345)#fit standard model
+
+prior_summary(bayes_switchCost_lm_tincats)#priors used for this model
+
+summary_bayes_switchCost_lm_tincats <- summary(bayes_switchCost_lm_tincats) 
+
+
+#standardised version of the model
+bayes_switchCost_lm_tincats_scaled <- stan_glm(formula = switch_cost_scaled ~ THI_cat + age_scaled + hearThresh_scaled + DASS_A_scaled + DASS_D_scaled + DASS_S_scaled, data = efit, seed = 12345)
+
+summary_bayes_switchCost_lm_tincats_scaled <- as.data.frame(summary(bayes_switchCost_lm_tincats_scaled))
+
+summary_bayes_switchCost_lm_tincats_scaled <- summary_bayes_switchCost_lm_tincats_scaled %>%
+  rownames_to_column(var = "IV")
+
+rank_bayes_switchCost_lm_tincats_scaled <- summary_bayes_switchCost_lm_tincats_scaled %>% 
+  filter(IV == "THI_cat2"|
+         IV == "THI_cat3"|
+         IV == "age_scaled"|
+         IV == "hearThresh_scaled"|
+         IV == "DASS_A_scaled"|
+         IV == "DASS_D_scaled"|
+         IV == "DASS_S_scaled") %>% 
+  mutate(partial_beta_rank = rank(-mean),
+         task = "switch_cost") %>% 
+  select(task, IV,mean, partial_beta_rank)#USE -mean() for rt and errors
+
+rank_bayes_switchCost_lm_tincats_scaled$mean <- round(rank_bayes_switchCost_lm_tincats_scaled$mean, digits = 2)
+
+switchCost_scaled_posterior_samples <- spread_draws(bayes_switchCost_lm_tincats_scaled, c(THI_cat3, THI_cat2), seed = 123)
+
+switchCost_partial_beta_prob_tinnitus <- mean(switchCost_scaled_posterior_samples$THI_cat2 > 0) %>% round(digits = 2)
+
+switchCost_partial_beta_prob_bothersome_tinnitus <- mean(switchCost_scaled_posterior_samples$THI_cat3 > 0) %>% round(digits = 2)
+
+#posterior_samples <- as.matrix(bayes_nls_lm_tincats, pars = "THI_cat3")#extract posterior draws for THI_cat3
+```
+
+###Errors
+```{r rstanarm rule errors THI groups lm}
+bayes_ruleErr_lm_tincats <- stan_glm(formula = rule_errors ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S, data = efit, seed = 12345)#fit standard model
+
+prior_summary(bayes_ruleErr_lm_tincats)#priors used for this model
+
+summary_bayes_ruleErr_lm_tincats <- summary(bayes_ruleErr_lm_tincats) 
+
+
+#standardised version of the model
+bayes_ruleErr_lm_tincats_scaled <- stan_glm(formula = rule_errors_scaled ~ THI_cat + age_scaled + hearThresh_scaled + DASS_A_scaled + DASS_D_scaled + DASS_S_scaled, data = efit, seed = 12345)
+
+summary_bayes_ruleErr_lm_tincats_scaled <- as.data.frame(summary(bayes_ruleErr_lm_tincats_scaled))
+
+summary_bayes_ruleErr_lm_tincats_scaled <- summary_bayes_ruleErr_lm_tincats_scaled %>%
+  rownames_to_column(var = "IV")
+
+rank_bayes_ruleErr_lm_tincats_scaled <- summary_bayes_ruleErr_lm_tincats_scaled %>% 
+  filter(IV == "THI_cat2"|
+         IV == "THI_cat3"|
+         IV == "age_scaled"|
+         IV == "hearThresh_scaled"|
+         IV == "DASS_A_scaled"|
+         IV == "DASS_D_scaled"|
+         IV == "DASS_S_scaled") %>% 
+  mutate(partial_beta_rank = rank(-mean),
+         task = "rule_errors") %>% 
+  select(task, IV,mean, partial_beta_rank)#USE -mean() for rt and errors
+
+rank_bayes_ruleErr_lm_tincats_scaled$mean <- round(rank_bayes_ruleErr_lm_tincats_scaled$mean, digits = 2)
+
+ruleErr_scaled_posterior_samples <- spread_draws(bayes_ruleErr_lm_tincats_scaled, c(THI_cat3, THI_cat2), seed = 123)
+
+ruleErr_partial_beta_prob_tinnitus <- mean(ruleErr_scaled_posterior_samples$THI_cat2 > 0) %>% round(digits = 2)
+
+ruleErr_partial_beta_prob_bothersome_tinnitus <- mean(ruleErr_scaled_posterior_samples$THI_cat3 > 0) %>% round(digits = 2)
+
+#posterior_samples <- as.matrix(bayes_nls_lm_tincats, pars = "THI_cat3")#extract posterior draws for THI_cat3
+```
+
+##Dual task
+```{r rstanarm Dualtask_Diff error THI groups lm}
+bayes_dualTask_lm_tincats <- stan_glm(formula = dualTask_wordsDiff ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S, data = efit, seed = 12345)#fit standard model
+
+prior_summary(bayes_dualTask_lm_tincats)#priors used for this model
+
+summary_bayes_dualTask_lm_tincats <- summary(bayes_dualTask_lm_tincats) 
+
+
+#standardised version of the model
+bayes_dualTask_lm_tincats_scaled <- stan_glm(formula = dualTask_wordsDiff_scaled ~ THI_cat + age_scaled + hearThresh_scaled + DASS_A_scaled + DASS_D_scaled + DASS_S_scaled, data = efit, seed = 12345)
+
+summary_bayes_dualTask_lm_tincats_scaled <- as.data.frame(summary(bayes_dualTask_lm_tincats_scaled))
+
+summary_bayes_dualTask_lm_tincats_scaled <- summary_bayes_dualTask_lm_tincats_scaled %>%
+  rownames_to_column(var = "IV")
+
+rank_bayes_dualTask_lm_tincats_scaled <- summary_bayes_dualTask_lm_tincats_scaled %>% 
+  filter(IV == "THI_cat2"|
+         IV == "THI_cat3"|
+         IV == "age_scaled"|
+         IV == "hearThresh_scaled"|
+         IV == "DASS_A_scaled"|
+         IV == "DASS_D_scaled"|
+         IV == "DASS_S_scaled") %>% 
+  mutate(partial_beta_rank = rank(mean),
+         task = "dual_task_words_diff") %>% 
+  select(task, IV,mean, partial_beta_rank)
+
+rank_bayes_dualTask_lm_tincats_scaled$mean <- round(rank_bayes_dualTask_lm_tincats_scaled$mean, digits = 2)
+
+dualTask_scaled_posterior_samples <- spread_draws(bayes_dualTask_lm_tincats_scaled, c(THI_cat3, THI_cat2), seed = 123)
+
+dualTask_partial_beta_prob_tinnitus <- mean(dualTask_scaled_posterior_samples$THI_cat2 < 0) %>% round(digits = 2)
+
+dualTask_partial_beta_prob_bothersome_tinnitus <- mean(dualTask_scaled_posterior_samples$THI_cat3 < 0) %>% round(digits = 2)
+
+#posterior_samples <- as.matrix(bayes_nls_lm_tincats, pars = "THI_cat3")#extract posterior draws for THI_cat3
+```
+
+##Matrix reasoning
+```{r rstanarm matrix reason THI groups lm}
+bayes_matrixReason_lm_tincats <- stan_glm(formula = matrixReason ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S, data = efit, seed = 12345)#fit standard model
+
+prior_summary(bayes_matrixReason_lm_tincats)#priors used for this model
+
+summary_bayes_matrixReason_lm_tincats <- summary(bayes_matrixReason_lm_tincats) 
+
+
+#standardised version of the model
+bayes_matrixReason_lm_tincats_scaled <- stan_glm(formula = matrixReason_scaled ~ THI_cat + age_scaled + hearThresh_scaled + DASS_A_scaled + DASS_D_scaled + DASS_S_scaled, data = efit,seed = 12345)
+
+summary_bayes_matrixReason_lm_tincats_scaled <- as.data.frame(summary(bayes_matrixReason_lm_tincats_scaled))
+
+summary_bayes_matrixReason_lm_tincats_scaled <- summary_bayes_matrixReason_lm_tincats_scaled %>%
+  rownames_to_column(var = "IV")
+
+rank_bayes_matrixReason_lm_tincats_scaled <- summary_bayes_matrixReason_lm_tincats_scaled %>% 
+  filter(IV == "THI_cat2"|
+         IV == "THI_cat3"|
+         IV == "age_scaled"|
+         IV == "hearThresh_scaled"|
+         IV == "DASS_A_scaled"|
+         IV == "DASS_D_scaled"|
+         IV == "DASS_S_scaled") %>% 
+  mutate(partial_beta_rank = rank(mean),
+         task = "matrix_reasoning") %>% 
+  select(task, IV,mean, partial_beta_rank)
+
+rank_bayes_matrixReason_lm_tincats_scaled$mean <- round(rank_bayes_matrixReason_lm_tincats_scaled$mean, digits = 2)
+
+matrixReason_scaled_posterior_samples <- spread_draws(bayes_matrixReason_lm_tincats_scaled, c(THI_cat3, THI_cat2), seed = 123)
+
+matrixReason_partial_beta_prob_tinnitus <- mean(matrixReason_scaled_posterior_samples$THI_cat2 < 0) %>% round(digits = 2)
+
+matrixReason_partial_beta_prob_bothersome_tinnitus <- mean(matrixReason_scaled_posterior_samples$THI_cat3 < 0) %>% round(digits = 2)
+
+#posterior_samples <- as.matrix(bayes_nls_lm_tincats, pars = "THI_cat3")#extract posterior draws for THI_cat3
+```
+
+```{r bind tables of all ranked bayes lm results}
+all_bayes_ranked_lm_tincats_scaled <- rbind(
+  rank_bayes_nls_lm_tincats_scaled,
+  rank_bayes_dualTask_lm_tincats_scaled,
+  rank_bayes_keepTrack_lm_tincats_scaled,
+ rank_bayes_matrixReason_lm_tincats_scaled,
+  rank_bayes_RIF_Diff_lm_tincats_scaled,
+  rank_bayes_ruleErr_lm_tincats_scaled,
+  rank_bayes_switchCost_lm_tincats_scaled,
+  rank_bayes_stroopErr_lm_tincats_scaled,
+  rank_bayes_stroopRT_lm_tincats_scaled
+) %>% rename(estimate = mean)
+
+all_bayes_ranked_lm_tincats_scaled$IV <- all_bayes_ranked_lm_tincats_scaled$IV %>% 
+  str_replace("THI_cat2", "tinnitus") %>% 
+  str_replace("THI_cat3", "bothersome_tinnitus")
+
+```
+
+```{r find bayes ranks of bothersome tinnitus partial beta}
+bayes_bothersome_tinnitus_rank <- all_bayes_ranked_lm_tincats_scaled %>%
+  filter(IV == "bothersome_tinnitus") %>% 
+  select(task, partial_beta_rank, estimate) %>% 
+  arrange(partial_beta_rank, estimate)
+
+bayes_bothersome_tinnitus_rank <- bayes_bothersome_tinnitus_rank %>% 
+  mutate(non_zero_prob = c(matrixReason_partial_beta_prob_bothersome_tinnitus,
+           keepTrack_partial_beta_prob_bothersome_tinnitus,
+           RIF_Diff_partial_beta_prob_bothersome_tinnitus,
+           stroopErr_partial_beta_prob_bothersome_tinnitus,
+           nls_partial_beta_prob_bothersome_tinnitus,
+           dualTask_partial_beta_prob_bothersome_tinnitus,
+           switchCost_partial_beta_prob_bothersome_tinnitus,ruleErr_partial_beta_prob_bothersome_tinnitus,
+           stroopRT_partial_beta_prob_bothersome_tinnitus))
+
+```
