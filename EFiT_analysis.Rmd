@@ -1,12 +1,12 @@
 ---
 title: "EFiT Data Analysis"
 author: "N. A. Clarke"
-date: "19 December 2019"
+date: "06 March 2020"
 output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, results = FALSE )
 ```
 
 ```{r load packages}
@@ -60,6 +60,17 @@ efit$THI_cat <- as.factor(efit$THI_cat) %>% ordered(levels = c("none", "mild", "
 #divide CRIq score by age
 efit <- efit %>% mutate(CRIq_aged = CRIq/age)
 
+#multiply DASS subscale scores by 2 and create DASS total variable
+efit <- efit %>% 
+  mutate(DASS_D = DASS_D*2,
+         DASS_A = DASS_A*2,
+         DASS_S = DASS_S*2,
+         DASS_total = DASS_D+DASS_A+DASS_S)
+
+#create new categorical variables for DASS subscales
+
+
+
 #create new RIF variable (proportion of correct respones and RIFdif (i.e. a measure of the RIF effect)
 efit <- efit %>% 
 mutate(pRIF_RpPlus = (Rp_plus/12) * 100, 
@@ -75,10 +86,18 @@ groupCount <- efit %>%
   arrange(THI_cat)
 
 
-#group_by tinnitus groups and median age
+#group_by tinnitus groups and median age self-report measures
 groupAge <- efit %>% 
   group_by(THI_cat) %>% 
-  summarise(median_age = median(age))
+  summarise(median_age = median(age),
+            age_sd = sd(age),
+            mean_hearing_threshold = mean(hearThresh),
+            mean_CFQ = mean(CFQ),
+            mean_RRS = mean(RRS),
+            mean_CRIq = mean(CRIq),
+            mean_DASS_D = mean(DASS_D),
+            mean_DASS_A = mean(DASS_A),
+            mean_DASS_S = mean(DASS_S))
 
 RIF <- efit %>% 
   group_by(THI_cat) %>% 
@@ -101,10 +120,6 @@ efit %>% ggplot(aes(x = age)) +
   facet_grid(. ~ THI_cat)
 ```
 
-```{r historgram nls}
-efit %>% ggplot(aes(x = matrixReason)) +
-  geom_histogram(bins = 40)
-```
 
 #T-tests
 ```{r filtered data frames of different groups}
@@ -938,7 +953,7 @@ control_mild_BF$bayes_factor <- signif(control_mild_BF$bayes_factor, 2)
 
 control_mild_BF <- control_mild_BF %>% arrange(desc(bayes_factor))
 ```
-
+`r knitr::kable(control_mild_BF)`
 ```{r table of bayes factors for control-modsev}
 #bayes factor for control vs modsev
 control_modsev_BF <- data.frame(
@@ -978,6 +993,7 @@ control_modsev_BF$bayes_factor <- signif(control_modsev_BF$bayes_factor, 2)
 
 control_modsev_BF <- control_modsev_BF %>% arrange(desc(bayes_factor))
 ```
+`r knitr::kable(control_modsev_BF)`
 #Linear regressions
 ##Data preparation
 ```{r linear regression data preparation}
@@ -1179,8 +1195,6 @@ bothersome_tinnitus_rank$estimate <- round(bothersome_tinnitus_rank$estimate, di
 bothersome_tinnitus_rank <- bothersome_tinnitus_rank %>% 
   arrange(partial_beta_rank, estimate)
 
-bothersome_tinnitus_rank
-
 all_ranked_lm_tincats_scaled %>% 
   filter(task == "rule_switch_cost"|
          task == "rule_switch_errors"|
@@ -1211,7 +1225,6 @@ RIF_mean_table$THI_cat <- RIF_mean_table$THI_cat %>%
 ```
 `r knitr::kable(RIF_mean_table)`
 
-Bayesian regressions
 #BAYESIAN LINEAR MODELS
 ##Number-letter sequencing
 ```{r rstanarm nls THI groups lm}
@@ -1613,3 +1626,18 @@ bayes_bothersome_tinnitus_rank <- bayes_bothersome_tinnitus_rank %>%
            stroopRT_partial_beta_prob_bothersome_tinnitus))
 
 ```
+`r knitr::kable(bothersome_tinnitus_rank)`
+
+`r knitr::kable(bayes_bothersome_tinnitus_rank)`
+```{r causal model}
+efit_causal <- efit %>%
+  filter(THI_cat != "none")
+
+m1 <- stan_glm(THI_cat ~ nls_correct+ switch_cost + stroop_incongruent +matrixReason + age + DASS_D + DASS_A + DASS_S,
+               family = "binomial",
+               data = efit_causal,
+               seed = 123)
+
+plot(m1, "areas", prob = 0.95, prob_outer = 1)
+```
+
