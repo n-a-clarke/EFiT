@@ -117,39 +117,58 @@ mutate(pRIF_RpPlus = (Rp_plus/12) * 100,
        pRIF_total = ((Rp_plus + Rp_minus + Np)/48) * 100,
        RIF_Diff = pRIF_Np - pRIF_RpMinus)
 
+opts <- options()  # save old options
+
+options(ggplot2.continuous.colour="viridis")
+options(ggplot2.continuous.fill = "viridis")
 
 ```
 ##Group counts
 ```{r tinnitus group demographics}
-#group_by tinnitus groups and count
-groupCount <- efit %>% 
-  group_by(THI_cat) %>% 
-  summarise(group_count = n()) %>% 
-  arrange(THI_cat)
-
-
 #group_by tinnitus groups and median age self-report measures
-groupAge <- efit %>% 
+group_descriptive_table <- efit %>% 
   group_by(THI_cat) %>% 
-  summarise(median_age = median(age),
+  summarise(group_count = n(),
+            mean_age = mean(age),
             age_sd = sd(age),
             mean_hearing_threshold = mean(hearThresh),
+            hearing_threshold_sd = sd(hearThresh),
             mean_CFQ = mean(CFQ),
+            CFQ_sd = sd(CFQ),
             mean_RRS = mean(RRS),
+            RRS_sd = sd(RRS),
             mean_CRIq = mean(CRIq),
+            CRIq_sd = sd(CRIq),
             mean_DASS_D = mean(DASS_D),
+            DASS_D_sd = sd(DASS_D),
             mean_DASS_A = mean(DASS_A),
-            mean_DASS_S = mean(DASS_S))
+            DASS_A_sd = sd(DASS_A),
+            mean_DASS_S = mean(DASS_S),
+            DASS_S_sd = sd(DASS_S))
 
-RIF <- efit %>% 
-  group_by(THI_cat) %>% 
-  summarise(Diff = mean(RIF_Diff),
-            Plus = mean(pRIF_RpPlus),
-            Minus = mean(pRIF_RpMinus),
-            Np = mean(pRIF_Np))
+group_descriptive_table <- t(group_descriptive_table)
+
+group_descriptive_table <- as.data.frame(group_descriptive_table)
+
+names(group_descriptive_table) <- c("control", "tinnitus", "bothersome tinnitus")
+
+group_descriptive_table <- group_descriptive_table[-1,]
+
+group_descriptive_table$control <- as.character(group_descriptive_table$control)#covert from factor to character before numeric
+group_descriptive_table$control <- as.numeric(group_descriptive_table$control)
+group_descriptive_table$control <- signif(group_descriptive_table$control,2)
+
+group_descriptive_table$tinnitus <- as.character(group_descriptive_table$tinnitus)#covert from factor to character before numeric
+group_descriptive_table$tinnitus <- as.numeric(group_descriptive_table$tinnitus)
+group_descriptive_table$tinnitus <- signif(group_descriptive_table$tinnitus,2)
+
+group_descriptive_table$`bothersome tinnitus` <- as.character(group_descriptive_table$`bothersome tinnitus`)#covert from factor to character before numeric
+group_descriptive_table$`bothersome tinnitus` <- as.numeric(group_descriptive_table$`bothersome tinnitus`)
+group_descriptive_table$`bothersome tinnitus` <- signif(group_descriptive_table$`bothersome tinnitus`,2)
+
 ```
 
-`r knitr::kable(groupCount)`
+`r knitr::kable(group_descriptive_table)`
 
 ##Group ages
 `r knitr::kable(groupAge)`
@@ -158,7 +177,15 @@ RIF <- efit %>%
 ```{r historgram age}
 efit %>% ggplot(aes(x = age)) +
   geom_histogram() +
-  facet_grid(. ~ THI_cat)
+  facet_grid(. ~ THI_cat) +
+  theme_cowplot()
+```
+
+```{r historgram hearing}
+efit %>% ggplot(aes(x = hearThresh)) +
+  geom_histogram() +
+  facet_grid(. ~ THI_cat) +
+  theme_cowplot()
 ```
 ##DASS stacked bar charts
 ```{r depression stacked bar chart}
@@ -168,10 +195,12 @@ ggplot(data=efit,
   scale_y_continuous(breaks = c(0,.1,.2,.3,.4,.5,.6,.7,.8,.9,1)) +
   xlab("group") +
   ylab("proportion") +
-  labs(fill = "depression categories") +
-  ggtitle("proportion of depression severity in each group") +
+  labs(fill = "DASS Category") +
+  ggtitle("Proportion of Depression Scores by Group") +
   theme_cowplot() +
-  theme(panel.grid.major.y = element_line(colour = "light gray", linetype = "dashed"))
+  theme(legend.text=element_text(size=10),
+        legend.title =element_text(size=11, face = "bold"),
+        panel.grid.major.y = element_line(colour = "light gray", linetype = "dashed"))
 ```
 
 ```{r anxiety stacked bar chart}
@@ -181,10 +210,12 @@ ggplot(data=efit,
   scale_y_continuous(breaks = c(0,.1,.2,.3,.4,.5,.6,.7,.8,.9,1)) +
   xlab("group") +
   ylab("proportion") +
-  labs(fill = "anxiety categories") +
-  ggtitle("proportion of anxiety severity in each group") +
+  labs(fill = "DASS Category") +
+  ggtitle("Proportion of Anxiety Scores by Group") +
   theme_cowplot() +
-  theme(panel.grid.major.y = element_line(colour = "light gray", linetype = "dashed"))
+  theme(legend.text=element_text(size=10),
+        legend.title =element_text(size=11, face = "bold"),
+        panel.grid.major.y = element_line(colour = "light gray", linetype = "dashed"))
 ```
 
 ```{r stress stacked bar chart}
@@ -194,17 +225,19 @@ ggplot(data=efit,
   scale_y_continuous(breaks = c(0,.1,.2,.3,.4,.5,.6,.7,.8,.9,1)) +
   xlab("group") +
   ylab("proportion") +
-  labs(fill = "stress categories") +
-  ggtitle("proportion of stress severity in each group") +
+  labs(fill = "DASS Category") +
+  ggtitle("Proportion of Stress Scores by Group") +
   theme_cowplot() +
-  theme(panel.grid.major.y = element_line(colour = "light gray", linetype = "dashed"))
+  theme(legend.text=element_text(size=10),
+        legend.title =element_text(size=11, face = "bold"),
+        panel.grid.major.y = element_line(colour = "light gray", linetype = "dashed"))
 ```
 
 ```{r create variable for DASS subscale scores}
 mod_DASS <- efit %>% 
   mutate(mod_DASS = ifelse(DASS_D > 13 |
                              DASS_A > 9 |
-                             DASS_S > 18, 1, 0))
+                             DASS_S > 18, "moderate or higher", "normal or mild"))
 
 mod_DASS %>% select(DASS_D_cat, DASS_A_cat, DASS_S_cat, mod_DASS)
 ```
@@ -216,20 +249,23 @@ ggplot(data=mod_DASS,
   scale_y_continuous(breaks = c(0,.1,.2,.3,.4,.5,.6,.7,.8,.9,1)) +
   xlab("group") +
   ylab("proportion") +
-  labs(fill = "moderate dass") +
-  ggtitle("proportion of moderate DASS severity in each group") +
+  labs(fill = "DASS Category") +
+  ggtitle("Proportion of Moderate or Higher Depression, Anxiety, or Stress Scores by Group") +
   theme_cowplot() +
-  theme(panel.grid.major.y = element_line(colour = "light gray", linetype = "dashed"))
+  theme(legend.text=element_text(size=10),
+        legend.title =element_text(size=11, face = "bold"),
+        panel.grid.major.y = element_line(colour = "light gray", linetype = "dashed")) +
+  scale_fill_viridis_d()
 ```
 #T-tests
 ```{r filtered data frames of different groups}
 #filter by groups for statistical tests
 controls <- efit %>% 
-  filter(THI_cat == "none")
+  filter(THI_cat == "control")
 mild_tin <- efit %>% 
-  filter(THI_cat == "mild")
+  filter(THI_cat == "tinnitus")
 modsev_tin <- efit %>% 
-  filter(THI_cat == "modsev")
+  filter(THI_cat == "bothersome tinnitus")
 ```
 ##Controls and Mild
 ###Number-letter sequencing
