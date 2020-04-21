@@ -47,15 +47,15 @@ efit <- left_join(efit, dualJoin, by = "participant")#join dual file
 efit <- left_join(efit, rifJoin, by = "participant")#join rif file
 ```
 #Data overview and descriptive statistics
-```{r add categories and count}
+```{r create new variables}
 efit <- efit %>% 
   mutate(
     THI_cat = ifelse(
-      THI >= 38 ,"modsev", ifelse(
-        THI > 0 & THI <= 37, "mild", "none"
+      THI >= 38 ,"bothersome tinnitus", ifelse(
+        THI > 0 & THI <= 37, "tinnitus", "control"
       ))) #add a categorical variable with the groups split by THI scores
 
-efit$THI_cat <- as.factor(efit$THI_cat) %>% ordered(levels = c("none", "mild", "modsev"))#factorise tinnitus groups
+efit$THI_cat <- as.factor(efit$THI_cat) %>% ordered(levels = c("control", "tinnitus", "bothersome tinnitus"))#factorise tinnitus groups
 
 #divide CRIq score by age
 efit <- efit %>% mutate(CRIq_aged = CRIq/age)
@@ -67,9 +67,47 @@ efit <- efit %>%
          DASS_S = DASS_S*2,
          DASS_total = DASS_D+DASS_A+DASS_S)
 
-#create new categorical variables for DASS subscales
+#create new categorical variables for DASS_D subscale
+efit <- efit %>% 
+  mutate(
+    DASS_D_cat = ifelse(
+      DASS_D >= 28 ,"extremely severe", ifelse(
+        DASS_D >= 21 & DASS_D <= 27, "severe", ifelse(
+          DASS_D >= 14 & DASS_D <= 20, "moderate", ifelse(
+          DASS_D >= 10 & DASS_D <= 13, "mild", "normal"
+          )
+        )
+      ))) 
 
+#create new categorical variables for DASS_A subscale
+efit <- efit %>% 
+  mutate(
+    DASS_A_cat = ifelse(
+      DASS_A >= 20 ,"extremely severe", ifelse(
+        DASS_A >= 15 & DASS_A <= 19, "severe", ifelse(
+          DASS_A >= 10 & DASS_A <= 14, "moderate", ifelse(
+          DASS_A >= 8 & DASS_A <= 9, "mild", "normal"
+          )
+        )
+      ))) 
 
+#create new categorical variables for DASS_S subscale
+efit <- efit %>% 
+  mutate(
+    DASS_S_cat = ifelse(
+      DASS_S >= 34 ,"extremely severe", ifelse(
+        DASS_S >= 26 & DASS_S <= 33, "severe", ifelse(
+          DASS_S >= 19 & DASS_S <= 25, "moderate", ifelse(
+          DASS_S >= 15 & DASS_S <= 18, "mild", "normal"
+          )
+        )
+      ))) 
+#factorise DASS subscale categories groups
+efit$DASS_D_cat <- as.factor(efit$DASS_D_cat) %>% ordered(levels = c("normal", "mild", "moderate", "severe", "extremely severe"))
+
+efit$DASS_A_cat <- as.factor(efit$DASS_A_cat) %>% ordered(levels = c("normal", "mild", "moderate", "severe", "extremely severe"))
+
+efit$DASS_S_cat <- as.factor(efit$DASS_S_cat) %>% ordered(levels = c("normal", "mild", "moderate", "severe", "extremely severe"))
 
 #create new RIF variable (proportion of correct respones and RIFdif (i.e. a measure of the RIF effect)
 efit <- efit %>% 
@@ -79,6 +117,10 @@ mutate(pRIF_RpPlus = (Rp_plus/12) * 100,
        pRIF_total = ((Rp_plus + Rp_minus + Np)/48) * 100,
        RIF_Diff = pRIF_Np - pRIF_RpMinus)
 
+
+```
+##Group counts
+```{r tinnitus group demographics}
 #group_by tinnitus groups and count
 groupCount <- efit %>% 
   group_by(THI_cat) %>% 
@@ -105,9 +147,8 @@ RIF <- efit %>%
             Plus = mean(pRIF_RpPlus),
             Minus = mean(pRIF_RpMinus),
             Np = mean(pRIF_Np))
-
 ```
-##Group counts
+
 `r knitr::kable(groupCount)`
 
 ##Group ages
@@ -119,8 +160,67 @@ efit %>% ggplot(aes(x = age)) +
   geom_histogram() +
   facet_grid(. ~ THI_cat)
 ```
+##DASS stacked bar charts
+```{r depression stacked bar chart}
+ggplot(data=efit, 
+       aes(x = THI_cat, fill = fct_rev(DASS_D_cat))) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(breaks = c(0,.1,.2,.3,.4,.5,.6,.7,.8,.9,1)) +
+  xlab("group") +
+  ylab("proportion") +
+  labs(fill = "depression categories") +
+  ggtitle("proportion of depression severity in each group") +
+  theme_cowplot() +
+  theme(panel.grid.major.y = element_line(colour = "light gray", linetype = "dashed"))
+```
 
+```{r anxiety stacked bar chart}
+ggplot(data=efit, 
+       aes(x = THI_cat, fill = fct_rev(DASS_A_cat))) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(breaks = c(0,.1,.2,.3,.4,.5,.6,.7,.8,.9,1)) +
+  xlab("group") +
+  ylab("proportion") +
+  labs(fill = "anxiety categories") +
+  ggtitle("proportion of anxiety severity in each group") +
+  theme_cowplot() +
+  theme(panel.grid.major.y = element_line(colour = "light gray", linetype = "dashed"))
+```
 
+```{r stress stacked bar chart}
+ggplot(data=efit, 
+       aes(x = THI_cat, fill = fct_rev(DASS_S_cat))) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(breaks = c(0,.1,.2,.3,.4,.5,.6,.7,.8,.9,1)) +
+  xlab("group") +
+  ylab("proportion") +
+  labs(fill = "stress categories") +
+  ggtitle("proportion of stress severity in each group") +
+  theme_cowplot() +
+  theme(panel.grid.major.y = element_line(colour = "light gray", linetype = "dashed"))
+```
+
+```{r create variable for DASS subscale scores}
+mod_DASS <- efit %>% 
+  mutate(mod_DASS = ifelse(DASS_D > 13 |
+                             DASS_A > 9 |
+                             DASS_S > 18, 1, 0))
+
+mod_DASS %>% select(DASS_D_cat, DASS_A_cat, DASS_S_cat, mod_DASS)
+```
+
+```{r moderate DASS scores stacked bar chart}
+ggplot(data=mod_DASS, 
+       aes(x = THI_cat, fill = as.factor(mod_DASS))) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(breaks = c(0,.1,.2,.3,.4,.5,.6,.7,.8,.9,1)) +
+  xlab("group") +
+  ylab("proportion") +
+  labs(fill = "moderate dass") +
+  ggtitle("proportion of moderate DASS severity in each group") +
+  theme_cowplot() +
+  theme(panel.grid.major.y = element_line(colour = "light gray", linetype = "dashed"))
+```
 #T-tests
 ```{r filtered data frames of different groups}
 #filter by groups for statistical tests
