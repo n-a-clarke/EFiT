@@ -20,6 +20,7 @@ library(bayesplot)
 library(psych)
 library(skimr)
 library(cowplot)
+library(viridis)
 library(ggdag)
 library(readxl)
 library(tidyverse)
@@ -117,15 +118,15 @@ mutate(pRIF_RpPlus = (Rp_plus/12) * 100,
        pRIF_total = ((Rp_plus + Rp_minus + Np)/48) * 100,
        RIF_Diff = pRIF_Np - pRIF_RpMinus)
 
-opts <- options()  # save old options
-
+opts <- options()  # save old colour options
+#set new colour options
 options(ggplot2.continuous.colour="viridis")
 options(ggplot2.continuous.fill = "viridis")
 
 ```
 ##Group counts
 ```{r tinnitus group demographics}
-#group_by tinnitus groups and median age self-report measures
+#group_by tinnitus groups for mean demographics and self-report measures
 group_descriptive_table <- efit %>% 
   group_by(THI_cat) %>% 
   summarise(group_count = n(),
@@ -160,18 +161,79 @@ group_descriptive_table$control <- signif(group_descriptive_table$control,2)
 
 group_descriptive_table$tinnitus <- as.character(group_descriptive_table$tinnitus)#covert from factor to character before numeric
 group_descriptive_table$tinnitus <- as.numeric(group_descriptive_table$tinnitus)
-group_descriptive_table$tinnitus <- signif(group_descriptive_table$tinnitus,2)
+group_descriptive_table$tinnitus <- round(group_descriptive_table$tinnitus,2)
 
 group_descriptive_table$`bothersome tinnitus` <- as.character(group_descriptive_table$`bothersome tinnitus`)#covert from factor to character before numeric
 group_descriptive_table$`bothersome tinnitus` <- as.numeric(group_descriptive_table$`bothersome tinnitus`)
-group_descriptive_table$`bothersome tinnitus` <- signif(group_descriptive_table$`bothersome tinnitus`,2)
+group_descriptive_table$`bothersome tinnitus` <- round(group_descriptive_table$`bothersome tinnitus`,2)
 
 ```
 
 `r knitr::kable(group_descriptive_table)`
 
-##Group ages
-`r knitr::kable(groupAge)`
+```{r cog measures mean and SD table}
+cog_descriptives <- efit %>% 
+  group_by(THI_cat) %>% 
+  summarise(mean_dual_words_easy = mean(dualTask_wordsEasy),
+         dual_words_easy_sd = sd (dualTask_wordsEasy),
+         mean_dual_words_hard = mean(dualTask_wordsDiff),
+         dual_words_hard_sd = sd(dualTask_wordsDiff),
+         mean_dual_numbers = mean(dual_task_total),
+         dual_numbers_sd = sd(dual_task_total),
+         mean_matrix = mean(matrixReason),
+         matrix_sd = sd(matrixReason),
+         mean_keep_track = mean(keepTrack),
+         keep_track_sd = sd(keepTrack),
+         mean_switch_trials = mean(switch_trials),
+         switch_trials_sd = sd(switch_trials),
+         mean_none_switch_trials = mean(none_switch_trials),
+         none_switch_trials_sd = sd(none_switch_trials),
+         mean_switch_cost = mean(switch_cost),
+         switch_cost_sd = sd(switch_cost),
+         mean_switch_error = mean(rule_errors),
+         switch_errors_sd = sd(rule_errors),
+         mean_stroop_congruent = mean(stroop_congruent),
+         stroop_congruent_sd = sd(stroop_congruent),
+         mean_stroop_incongruent = mean(stroop_incongruent),
+         stroop_incongruent_sd = sd(stroop_incongruent),
+         mean_stroop_neutral = mean(stroop_neutral),
+         stroop_neutral_sd = sd(stroop_neutral),
+         mean_stroop_errors = mean(stroop_errors),
+         stroop_errors_sd = sd(stroop_errors),
+         mean_nls_correct = mean(nls_correct),
+         nls_correct_sd = sd(nls_correct),
+         mean_pRIF_RpPlus = mean(pRIF_RpPlus),
+         pRIF_RpPlus_sd = sd(pRIF_RpPlus),
+         mean_pRIF_RpMinus = mean(pRIF_RpMinus),
+         pRIF_RpMinus_sd = sd(pRIF_RpMinus),
+         mean_pRIF_Np = mean(pRIF_Np),
+         pRIF_Np_sd = sd(pRIF_Np),
+         mean_RIF_diff = mean(RIF_Diff),
+         RIF_diff_sd = sd(RIF_Diff)
+  )
+
+cog_descriptives <- t(cog_descriptives)
+
+cog_descriptives <- as.data.frame(cog_descriptives)
+
+names(cog_descriptives) <- c("control", "tinnitus", "bothersome tinnitus")
+
+cog_descriptives <- cog_descriptives[-1,]
+
+cog_descriptives$control <- as.character(cog_descriptives$control)#covert from factor to character before numeric
+cog_descriptives$control <- as.numeric(cog_descriptives$control)
+cog_descriptives$control <- round(cog_descriptives$control,2)
+
+cog_descriptives$tinnitus <- as.character(cog_descriptives$tinnitus)#covert from factor to character before numeric
+cog_descriptives$tinnitus <- as.numeric(cog_descriptives$tinnitus)
+cog_descriptives$tinnitus <- round(cog_descriptives$tinnitus,2)
+
+cog_descriptives$`bothersome tinnitus` <- as.character(cog_descriptives$`bothersome tinnitus`)#covert from factor to character before numeric
+cog_descriptives$`bothersome tinnitus` <- as.numeric(cog_descriptives$`bothersome tinnitus`)
+cog_descriptives$`bothersome tinnitus` <- round(cog_descriptives$`bothersome tinnitus`,2)
+```
+
+`r knitr::kable(cog_descriptives)`
 
 ##Histograms
 ```{r historgram age}
@@ -604,7 +666,7 @@ matrix_mild_modsev_t.test_tidy <- matrix_mild_modsev_t.test_tidy %>%
   mutate(task = "matrix_reasoning", groups = "mild_modsev")
 ```
 
-##Table of t-test results
+##Tables of t-test results
 ###Controls and Mild
 ```{r bind together tidy t.test results of control and milds}
 t.test_table_control_mild <- bind_rows(nls_control_mild_t.test_tidy,
@@ -617,14 +679,20 @@ t.test_table_control_mild <- bind_rows(nls_control_mild_t.test_tidy,
         dualtask_control_mild_t.test_tidy,
         matrix_control_mild_t.test_tidy)
 
-#add task names to table and filter out tasks that are statistically significant at Bayes Factor agreement level
-t.test_table_control_mild %>% 
+
+t.test_table_control_mild <- t.test_table_control_mild %>% 
   mutate(task = c("nls", "keeptrack", "stroopRT",
                   "stroopErr", "RIFdiff", "switch_cost",
                   "switch_error", "dual_task", "matrix_reason")) %>% 
-  select(task, p.value) %>% 
-  filter(p.value < 0.01)
+  select(task, estimate, estimate1, estimate2, conf.low, conf.high, t.statistic = statistic, deg.of.freedom = parameter, p.value, H1 = alternative) %>% 
+  mutate_if(is.numeric, round, digits = 2) %>% 
+  mutate(deg.of.freedom = round(deg.of.freedom)) %>% 
+  arrange(p.value)
+
+#The degrees of freedom ssociated with this variance estimate is approximated using the Welch–Satterthwaite equation:
+
 ```
+`r knitr::kable(t.test_table_control_mild)`
 ###Controls and Modsev
 ```{r bind together tidy t.test results of control and modsev}
 t.test_table_control_modsev <- bind_rows(nls_control_modsev_t.test_tidy,
@@ -637,14 +705,16 @@ t.test_table_control_modsev <- bind_rows(nls_control_modsev_t.test_tidy,
         dualtask_control_modsev_t.test_tidy,
         matrix_control_modsev_t.test_tidy)
 
-#add task names to table and filter out tasks that are statistically significant at Bayes Factor agreement level
-t.test_table_control_modsev %>% 
+t.test_table_control_modsev <- t.test_table_control_modsev %>% 
   mutate(task = c("nls", "keeptrack", "stroopRT",
                   "stroopErr", "RIFdiff", "switch_cost",
                   "switch_error", "dual_task", "matrix_reason")) %>% 
-  select(task, p.value) %>% 
-  filter(p.value < 0.01)
+  select(task, estimate, estimate1, estimate2, conf.low, conf.high, t.statistic = statistic, deg.of.freedom = parameter, p.value, H1 = alternative) %>% 
+  mutate_if(is.numeric, round, digits = 2) %>% 
+  mutate(deg.of.freedom = round(deg.of.freedom)) %>% 
+  arrange(p.value)
 ```    
+`r knitr::kable(t.test_table_control_modsev)`
 ###Mild and Modsev
 ```{r bind together tidy t.test results of mild and modsev}
 t.test_table_mild_modsev <- bind_rows(nls_mild_modsev_t.test_tidy,
@@ -656,7 +726,17 @@ t.test_table_mild_modsev <- bind_rows(nls_mild_modsev_t.test_tidy,
         switchErr_mild_modsev_t.test_tidy,
         dualtask_mild_modsev_t.test_tidy,
         matrix_mild_modsev_t.test_tidy)
+
+t.test_table_mild_modsev <- t.test_table_mild_modsev %>% 
+  mutate(task = c("nls", "keeptrack", "stroopRT",
+                  "stroopErr", "RIFdiff", "switch_cost",
+                  "switch_error", "dual_task", "matrix_reason")) %>% 
+  select(task, estimate, estimate1, estimate2, conf.low, conf.high, t.statistic = statistic, deg.of.freedom = parameter, p.value, H1 = alternative) %>% 
+  mutate_if(is.numeric, round, digits = 2) %>% 
+  mutate(deg.of.freedom = round(deg.of.freedom)) %>% 
+  arrange(p.value)
 ``` 
+`r knitr::kable(t.test_table_mild_modsev)`
 #Cohen's d
 ```{r calculate cohens d for all tasks}
 #effect size for RIF effect
@@ -706,16 +786,21 @@ dual_cd_mild_modsev <- cohens_d(mild_tin$dual_task_total, modsev_tin$dual_task_t
 ```
 
 ```{r cohens d confidence interval control-mild}
+#create group count variable
+groupCount <- efit %>% 
+  group_by(THI_cat) %>% 
+  summarise(group_count = n())
+
 #cohens_d confidence intervals for controls vs mild
-rif_cd_control_mild_CI <- d.ci(rif_cd_control_mild, n1=groupCount$group_count[1], n2=groupCount$group_count[3])#confidence interval for RIF
-nls_cd_control_mild_CI <- d.ci(nls_cd_control_mild, n1=groupCount$group_count[1], n2=groupCount$group_count[3])#confidence interval for nls
-keep_cd_control_mild_CI <- d.ci(keep_cd_control_mild, n1=groupCount$group_count[1], n2=groupCount$group_count[3])#confidence interval for keep track
-matrix_cd_control_mild_CI <- d.ci(matrix_cd_control_mild, n1=groupCount$group_count[1], n2=groupCount$group_count[3])#confidence interval for matrix reasoning
-stroopRT_cd_control_mild_CI <- d.ci(stroopRT_cd_control_mild , n1=groupCount$group_count[1], n2=groupCount$group_count[3])#confidence interval for Stroop RT
-stroopERR_cd_control_mild_CI <- d.ci(stroopERR_cd_control_mild , n1=groupCount$group_count[1], n2=groupCount$group_count[3])#confidence interval for Stroop errors
-switchCostRT_cd_control_mild_CI <- d.ci(switchCostRT_cd_control_mild , n1=groupCount$group_count[1], n2=groupCount$group_count[3])#confidence interval for switch cost
-switchErr_cd_control_mild_CI <- d.ci(switchErr_cd_control_mild , n1=groupCount$group_count[1], n2=groupCount$group_count[3])#confidence interval for switch errors
-dual_cd_control_mildCI <- d.ci(dual_cd_control_mild , n1=groupCount$group_count[1], n2=groupCount$group_count[3])#confidence interval for dual task
+rif_cd_control_mild_CI <- d.ci(rif_cd_control_mild, n1=groupCount$group_count[1], n2=groupCount$group_count[2])#confidence interval for RIF
+nls_cd_control_mild_CI <- d.ci(nls_cd_control_mild, n1=groupCount$group_count[1], n2=groupCount$group_count[2])#confidence interval for nls
+keep_cd_control_mild_CI <- d.ci(keep_cd_control_mild, n1=groupCount$group_count[1], n2=groupCount$group_count[2])#confidence interval for keep track
+matrix_cd_control_mild_CI <- d.ci(matrix_cd_control_mild, n1=groupCount$group_count[1], n2=groupCount$group_count[2])#confidence interval for matrix reasoning
+stroopRT_cd_control_mild_CI <- d.ci(stroopRT_cd_control_mild , n1=groupCount$group_count[1], n2=groupCount$group_count[2])#confidence interval for Stroop RT
+stroopERR_cd_control_mild_CI <- d.ci(stroopERR_cd_control_mild , n1=groupCount$group_count[1], n2=groupCount$group_count[2])#confidence interval for Stroop errors
+switchCostRT_cd_control_mild_CI <- d.ci(switchCostRT_cd_control_mild , n1=groupCount$group_count[1], n2=groupCount$group_count[2])#confidence interval for switch cost
+switchErr_cd_control_mild_CI <- d.ci(switchErr_cd_control_mild , n1=groupCount$group_count[1], n2=groupCount$group_count[2])#confidence interval for switch errors
+dual_cd_control_mildCI <- d.ci(dual_cd_control_mild , n1=groupCount$group_count[1], n2=groupCount$group_count[2])#confidence interval for dual task
 ```
 
 ```{r cohens d confidence intervals control-modsev}
@@ -737,29 +822,29 @@ dual_cd_control_modsevCI <- d.ci(dual_cd_control_modsev , n1=groupCount$group_co
 
 ```{r cohens d confidence intervals mild-modsev}
 #cohens_d confidence intervals for controls vs modsev
-rif_cd_mild_modsev_CI <- d.ci(rif_cd_mild_modsev, n1=groupCount$group_count[1], n2=groupCount$group_count[3])#confidence interval for RIF
-nls_cd_mild_modsev_CI <- d.ci(nls_cd_mild_modsev, n1=groupCount$group_count[1], n2=groupCount$group_count[3])#confidence interval for nls
-keep_cd_mild_modsev_CI <- d.ci(keep_cd_mild_modsev, n1=groupCount$group_count[1], n2=groupCount$group_count[3])#confidence interval for keep track
-matrix_cd_mild_modsev_CI <- d.ci(matrix_cd_mild_modsev, n1=groupCount$group_count[1], n2=groupCount$group_count[3])#confidence interval for matrix reasoning
-stroopRT_cd_mild_modsev_CI <- d.ci(stroopRT_cd_mild_modsev , n1=groupCount$group_count[1], n2=groupCount$group_count[3])#confidence interval for Stroop RT
-stroopERR_cd_mild_modsev_CI <- d.ci(stroopERR_cd_mild_modsev , n1=groupCount$group_count[1], n2=groupCount$group_count[3])#confidence interval for Stroop errors
-switchCostRT_cd_mild_modsev_CI <- d.ci(switchCostRT_cd_mild_modsev , n1=groupCount$group_count[1], n2=groupCount$group_count[3])#confidence interval for switch cost
-switchErr_cd_mild_modsev_CI <- d.ci(switchErr_cd_mild_modsev , n1=groupCount$group_count[1], n2=groupCount$group_count[3])#confidence interval for switch errors
-dual_cd_mild_modsevCI <- d.ci(dual_cd_mild_modsev , n1=groupCount$group_count[1], n2=groupCount$group_count[3])#confidence interval for dual task
+rif_cd_mild_modsev_CI <- d.ci(rif_cd_mild_modsev, n1=groupCount$group_count[2], n2=groupCount$group_count[3])#confidence interval for RIF
+nls_cd_mild_modsev_CI <- d.ci(nls_cd_mild_modsev, n1=groupCount$group_count[2], n2=groupCount$group_count[3])#confidence interval for nls
+keep_cd_mild_modsev_CI <- d.ci(keep_cd_mild_modsev, n1=groupCount$group_count[2], n2=groupCount$group_count[3])#confidence interval for keep track
+matrix_cd_mild_modsev_CI <- d.ci(matrix_cd_mild_modsev, n1=groupCount$group_count[2], n2=groupCount$group_count[3])#confidence interval for matrix reasoning
+stroopRT_cd_mild_modsev_CI <- d.ci(stroopRT_cd_mild_modsev , n1=groupCount$group_count[2], n2=groupCount$group_count[3])#confidence interval for Stroop RT
+stroopERR_cd_mild_modsev_CI <- d.ci(stroopERR_cd_mild_modsev , n1=groupCount$group_count[2], n2=groupCount$group_count[3])#confidence interval for Stroop errors
+switchCostRT_cd_mild_modsev_CI <- d.ci(switchCostRT_cd_mild_modsev , n1=groupCount$group_count[2], n2=groupCount$group_count[3])#confidence interval for switch cost
+switchErr_cd_mild_modsev_CI <- d.ci(switchErr_cd_mild_modsev , n1=groupCount$group_count[2], n2=groupCount$group_count[3])#confidence interval for switch errors
+dual_cd_mild_modsevCI <- d.ci(dual_cd_mild_modsev , n1=groupCount$group_count[2], n2=groupCount$group_count[3])#confidence interval for dual task
 ```
 
 ```{r create table of cohens d and confidence intervals for control-mild}
 #create dataframe of cohens_d scores for control vs mild
 control_mild_cd <- data.frame(
-  c("Retrieval-induced forgetting", 
-    "Number letter sequencing", 
-    "Keep track", 
-    "Matrix reasoning",
-    "Stroop-RT", 
-    "Stroop-errors", 
-    "Switch cost", 
-    "Switch errors", 
-    "Dual task"),
+  c("retrieval-induced forgetting", 
+    "number letter sequencing", 
+    "keep track", 
+    "matrix reasoning",
+    "stroop (response time)", 
+    "stroop (errors)", 
+    "rule-switch (switch-cost)", 
+    "rule-switch (errors)", 
+    "dual task (numbers correct)"),
   c(rif_cd_control_mild, 
     nls_cd_control_mild, 
     keep_cd_control_mild, 
@@ -787,7 +872,7 @@ control_mild_cd <- data.frame(
     switchCostRT_cd_control_mild_CI[3],
     switchErr_cd_control_mild_CI[3], 
     dual_cd_control_mildCI[3]),
-  c(rep("control vs mild", 9))
+  c(rep("control vs tinnitus", 9))
 )
 colnames(control_mild_cd) <- c("task", "cohens_d", "CI_lower","CI_upper", "group")
 ```
@@ -795,15 +880,15 @@ colnames(control_mild_cd) <- c("task", "cohens_d", "CI_lower","CI_upper", "group
 ```{r create table of cohens d and confidence intervals for controls-modsev}
 #create dataframe of cohens_d scores for control vs modsev
 control_modsev_cd <- data.frame(
-  c("Retrieval-induced forgetting", 
-    "Number letter sequencing", 
-    "Keep track", 
-    "Matrix reasoning",
-    "Stroop-RT", 
-    "Stroop-errors", 
-    "Switch cost", 
-    "Switch errors", 
-    "Dual task"),
+  c("retrieval-induced forgetting", 
+    "number letter sequencing", 
+    "keep track", 
+    "matrix reasoning",
+    "stroop (response time)", 
+    "stroop (errors)", 
+    "rule-switch (switch-cost)", 
+    "rule-switch (errors)", 
+    "dual task (numbers correct)"),
   c(rif_cd_control_modsev, 
     nls_cd_control_modsev, 
     keep_cd_control_modsev, 
@@ -831,7 +916,7 @@ control_modsev_cd <- data.frame(
     switchCostRT_cd_control_modsev_CI[3],
     switchErr_cd_control_modsev_CI[3], 
     dual_cd_control_modsevCI[3]),
-  c(rep("control vs modsev", 9))
+  c(rep("control vs bothersome tinnitus", 9))
   )
 colnames(control_modsev_cd) <- c("task", "cohens_d", "CI_lower","CI_upper", "group")
 ```
@@ -839,15 +924,15 @@ colnames(control_modsev_cd) <- c("task", "cohens_d", "CI_lower","CI_upper", "gro
 ```{r create table of cohens d and confidence intervals for mild-modsev}
 #create dataframe of cohens_d scores for mild vs modsev
 mild_modsev_cd <- data.frame(
-  c("Retrieval-induced forgetting", 
-    "Number letter sequencing", 
-    "Keep track", 
-    "Matrix reasoning",
-    "Stroop-RT", 
-    "Stroop-errors", 
-    "Switch cost", 
-    "Switch errors", 
-    "Dual task"),
+  c("retrieval-induced forgetting", 
+    "number letter sequencing", 
+    "keep track", 
+    "matrix reasoning",
+    "stroop (response time)", 
+    "stroop (errors)", 
+    "rule-switch (switch-cost)", 
+    "rule-switch (errors)", 
+    "dual task (numbers correct)"),
   c(rif_cd_mild_modsev, 
     nls_cd_mild_modsev, 
     keep_cd_mild_modsev, 
@@ -875,7 +960,7 @@ mild_modsev_cd <- data.frame(
     switchCostRT_cd_mild_modsev_CI[3],
     switchErr_cd_mild_modsev_CI[3], 
     dual_cd_mild_modsevCI[3]),
-  c(rep("mild vs modsev", 9))
+  c(rep("tinnitus vs bothersome tinnitus", 9))
   )
 colnames(mild_modsev_cd) <- c("task", "cohens_d", "CI_lower","CI_upper", "group")
 ```
@@ -889,11 +974,11 @@ all_groups_cohens_ci$group <- as.factor(all_groups_cohens_ci$group)
 
 ```{r filtered table for control-mild and control-moderate cohens d plot}
 control_mild_control_modsev_cohensd_ci <- all_groups_cohens_ci %>% 
-  filter(group != "mild vs modsev")#filter all group cohens d table for control-mild and control-modsev
+  filter(group != "tinnitus vs bothersome tinnitus")#filter all group cohens d table for control-mild and control-modsev
 
-control_mild_control_modsev_cohensd_ci <- control_mild_control_modsev_cohensd_ci %>% arrange(cohens_d)#arrange for easier transform
+control_mild_control_modsev_cohensd_ci <- control_mild_control_modsev_cohensd_ci %>% arrange(task,cohens_d)#arrange for easier transform
 
-control_mild_control_modsev_cohensd_ci[1:12,2:4] <- control_mild_control_modsev_cohensd_ci[1:12,2:4]*-1#transofrm direction of negative effects for easier interpretation - now all effect sizes represent
+control_mild_control_modsev_cohensd_ci[11:18,2:4] <- control_mild_control_modsev_cohensd_ci[11:18,2:4]*-1#transofrm direction of response time and error tasks for easier interpretation - now all effect size represents performance relative to reference group. So in this instance, the control is the reference and a negative effect size is poorer performance on that task
 
 #round confidence intervals and lower/upper bounds to 1 dececimal place
 control_mild_control_modsev_cohensd_ci$cohens_d <- round(control_mild_control_modsev_cohensd_ci$cohens_d,1)
@@ -905,14 +990,64 @@ control_mild_control_modsev_cohensd_ci$CI_upper <- round(control_mild_control_mo
 ```{r cohens d plot of control-mild and control-modsev}
 #plot of cohens_d for control vs modsev and control vs mild for each task
 control_mild_control_modsev_cohensd_ci %>% 
-  arrange(desc(task)) %>% 
-ggplot(aes(x = task, y = cohens_d, colour = group)) +
-  geom_point(alpha = 0.9, shape = 15, size = 3, position = position_dodge(width=0.5)) +
+ggplot(aes(x = fct_rev(task), y = cohens_d, colour = group)) +
+  geom_point(shape = 15, size = 3, position = position_dodge(width=0.5)) +
   geom_errorbar(alpha = 0.5, aes(ymin=CI_lower, ymax=CI_upper), position=position_dodge(width=0.5)) +
   geom_hline(yintercept = 0, linetype = "longdash") +
+  scale_y_continuous(breaks = c(-1.2,-1.1,-1,-.9,-.8,-.7,-.6,-.5,-.4,-.3,-.2,-.1,0,.1,.2,.3,.4,.5,.6,.7,.8,.9,1)) +
   coord_flip() +
-  scale_color_brewer(palette = "Set1") +
-  theme_cowplot(12)
+  theme_cowplot() +
+  scale_color_viridis(discrete = TRUE, option = "D") +
+  theme(legend.text=element_text(size=10),
+        legend.title =element_text(size=11, face = "bold"))+
+  xlab("Task") +
+  ylab("Standardised Mean Difference") +
+  labs(colour = "Comparison Groups") +
+  ggtitle("Tinnitus and Bothersome Tinnitus Group Task Performance Compared to Control Group")
+
+```
+
+```{r filtered table for control-mild and mild-moderate cohens d plot}
+mild_control_mild_modsev_cohensd_ci <- all_groups_cohens_ci %>% 
+  filter(group != "control vs bothersome tinnitus")#filter all group cohens d table for control-mild and mild-modsev
+
+mild_control_mild_modsev_cohensd_ci[1:9,2:4] <- mild_control_mild_modsev_cohensd_ci[1:9,2:4]*-1
+
+mild_control_mild_modsev_cohensd_ci$group <- as.character(mild_control_mild_modsev_cohensd_ci$group)
+
+mild_control_mild_modsev_cohensd_ci <- mild_control_mild_modsev_cohensd_ci %>% mutate(group = replace(group, group == "control vs tinnitus", "tinnitus vs control"))
+
+mild_control_mild_modsev_cohensd_ci$group <- as.factor(mild_control_mild_modsev_cohensd_ci$group)
+
+mild_control_mild_modsev_cohensd_ci <- mild_control_mild_modsev_cohensd_ci %>% arrange(task,cohens_d)#arrange for easier transform
+
+mild_control_mild_modsev_cohensd_ci[11:18,2:4] <- mild_control_mild_modsev_cohensd_ci[11:18,2:4]*-1#transofrm direction of response time and error tasks for easier interpretation - now all effect size represents performance relative to reference group. So in this instance, the control is the reference and a negative effect size is poorer performance on that task
+
+#round confidence intervals and lower/upper bounds to 1 dececimal place
+mild_control_mild_modsev_cohensd_ci$cohens_d <- round(mild_control_mild_modsev_cohensd_ci$cohens_d,1)
+mild_control_mild_modsev_cohensd_ci$CI_lower <- round(mild_control_mild_modsev_cohensd_ci$CI_lower,2)
+mild_control_mild_modsev_cohensd_ci$CI_upper <- round(mild_control_mild_modsev_cohensd_ci$CI_upper,2)
+
+```
+
+```{r cohens d plot of mild-control and mild-modsev}
+#plot of cohens_d for control vs modsev and control vs mild for each task
+mild_control_mild_modsev_cohensd_ci %>% 
+ggplot(aes(x = fct_rev(task), y = cohens_d, colour = group)) +
+  geom_point(shape = 15, size = 3, position = position_dodge(width=0.5)) +
+  geom_errorbar(alpha = 0.5, aes(ymin=CI_lower, ymax=CI_upper), position=position_dodge(width=0.5)) +
+  geom_hline(yintercept = 0, linetype = "longdash") +
+  scale_y_continuous(breaks = c(-1.2,-1.1,-1,-.9,-.8,-.7,-.6,-.5,-.4,-.3,-.2,-.1,0,.1,.2,.3,.4,.5,.6,.7,.8,.9,1)) +
+  coord_flip() +
+  theme_cowplot() +
+  scale_color_viridis(discrete = TRUE, option = "D") +
+  theme(legend.text=element_text(size=10),
+        legend.title =element_text(size=11, face = "bold"))+
+  xlab("Task") +
+  ylab("Standardised Mean Difference") +
+  labs(colour = "Comparison Groups") +
+  ggtitle("Control and Bothersome Tinnitus Group Task Performance Compared to Tinnitus Group")
+
 ```
 
 #Bayesian t-tests
