@@ -141,6 +141,8 @@ group_descriptive_table <- efit %>%
             mean_CRIq = mean(CRIq),
             CRIq_sd = sd(CRIq),
             mean_DASS_D = mean(DASS_D),
+            mean_CRIq_aged = mean(CRIq_aged),
+            CRIq_aged_sd = sd(CRIq_aged),
             DASS_D_sd = sd(DASS_D),
             mean_DASS_A = mean(DASS_A),
             DASS_A_sd = sd(DASS_A),
@@ -1011,11 +1013,11 @@ ggplot(aes(x = fct_rev(task), y = cohens_d, colour = group)) +
 mild_control_mild_modsev_cohensd_ci <- all_groups_cohens_ci %>% 
   filter(group != "control vs bothersome tinnitus")#filter all group cohens d table for control-mild and mild-modsev
 
-mild_control_mild_modsev_cohensd_ci[1:9,2:4] <- mild_control_mild_modsev_cohensd_ci[1:9,2:4]*-1
+mild_control_mild_modsev_cohensd_ci[1:9,2:4] <- mild_control_mild_modsev_cohensd_ci[1:9,2:4]*-1 #reverse sign of all effect sizes for control vs tinnitus, so it now represents tinnitus vs control
 
 mild_control_mild_modsev_cohensd_ci$group <- as.character(mild_control_mild_modsev_cohensd_ci$group)
 
-mild_control_mild_modsev_cohensd_ci <- mild_control_mild_modsev_cohensd_ci %>% mutate(group = replace(group, group == "control vs tinnitus", "tinnitus vs control"))
+mild_control_mild_modsev_cohensd_ci <- mild_control_mild_modsev_cohensd_ci %>% mutate(group = replace(group, group == "control vs tinnitus", "tinnitus vs control"))#label tinnitus as new reference group
 
 mild_control_mild_modsev_cohensd_ci$group <- as.factor(mild_control_mild_modsev_cohensd_ci$group)
 
@@ -1027,7 +1029,6 @@ mild_control_mild_modsev_cohensd_ci[11:18,2:4] <- mild_control_mild_modsev_cohen
 mild_control_mild_modsev_cohensd_ci$cohens_d <- round(mild_control_mild_modsev_cohensd_ci$cohens_d,1)
 mild_control_mild_modsev_cohensd_ci$CI_lower <- round(mild_control_mild_modsev_cohensd_ci$CI_lower,2)
 mild_control_mild_modsev_cohensd_ci$CI_upper <- round(mild_control_mild_modsev_cohensd_ci$CI_upper,2)
-
 ```
 
 ```{r cohens d plot of mild-control and mild-modsev}
@@ -1046,7 +1047,7 @@ ggplot(aes(x = fct_rev(task), y = cohens_d, colour = group)) +
   xlab("Task") +
   ylab("Standardised Mean Difference") +
   labs(colour = "Comparison Groups") +
-  ggtitle("Control and Bothersome Tinnitus Group Task Performance Compared to Tinnitus Group")
+  ggtitle("Control and Bothersome Tinnitus Groups Task Performance Compared to Tinnitus Group")
 
 ```
 
@@ -1054,7 +1055,7 @@ ggplot(aes(x = fct_rev(task), y = cohens_d, colour = group)) +
 ```{r bayesian t.test control-mild}
 #Controls vs mild - drop modsev observations for bayesian t-test
 bayes_control_mild <- efit %>% 
-  filter(THI_cat != "modsev") %>% 
+  filter(THI_cat != "bothersome tinnitus") %>% 
   droplevels()
 
 #bayesian ttest for rule switch task - control vs mild
@@ -1062,8 +1063,8 @@ control_mild_switch_cost_BF <- BayesFactor::ttestBF(formula = switch_cost ~ THI_
 BF_control_mild_switchCost <- describe_posterior(control_mild_switch_cost_BF)
 
 #bayesian ttest for rule switch error - control vs mild
-control_mod_mild_switch_error_BF <- BayesFactor::ttestBF(formula = rule_errors ~ THI_cat, data = bayes_control_mild)
-BF_control_mild_switchError <- describe_posterior(control_mod_mild_switch_error_BF)
+control_mild_switch_error_BF <- BayesFactor::ttestBF(formula = rule_errors ~ THI_cat, data = bayes_control_mild)
+BF_control_mild_switchError <- describe_posterior(control_mild_switch_error_BF)
 
 #bayesian ttest for stroop response time - control vs mild
 control_mild_stroop_rt_BF <- BayesFactor::ttestBF(formula = stroop_incongruent ~ THI_cat, data = bayes_control_mild)
@@ -1121,7 +1122,7 @@ BF_control_mild_stress <- describe_posterior(control_mild_stress_BF)
 ```{r bayesian t.test control-modsev}
 #Controls vs modsev - drop mild observations for bayesian t-test
 bayes_control_modsev <- efit %>% 
-  filter(THI_cat != "mild") %>% 
+  filter(THI_cat != "tinnitus") %>% 
   droplevels()
 
 #bayesian ttest for switch cost - control vs modsev
@@ -1185,6 +1186,73 @@ control_modsev_stress_BF <- BayesFactor::ttestBF(formula = DASS_S ~ THI_cat, dat
 BF_control_modsev_stress <- describe_posterior(control_modsev_stress_BF)
 ```
 
+```{r bayesian t.test mild-modsev}
+#mild vs modsev - drop modsev observations for bayesian t-test
+bayes_mild_modsev <- efit %>% 
+  filter(THI_cat != "control") %>% 
+  droplevels()
+
+#bayesian ttest for rule switch task - mild vs modsev
+mild_modsev_switch_cost_BF <- BayesFactor::ttestBF(formula = switch_cost ~ THI_cat, data = bayes_mild_modsev)
+BF_mild_modsev_switchCost <- describe_posterior(mild_modsev_switch_cost_BF)
+
+#bayesian ttest for rule switch error - mild vs modsev
+mild_modsev_switch_error_BF <- BayesFactor::ttestBF(formula = rule_errors ~ THI_cat, data = bayes_mild_modsev)
+BF_mild_modsev_switchError <- describe_posterior(mild_modsev_switch_error_BF)
+
+#bayesian ttest for stroop response time - mild vs modsev
+mild_modsev_stroop_rt_BF <- BayesFactor::ttestBF(formula = stroop_incongruent ~ THI_cat, data = bayes_mild_modsev)
+BF_mild_modsev_stroopRT <- describe_posterior(mild_modsev_stroop_rt_BF)
+
+#bayesian ttest for stroop error count - mild vs modsev
+mild_modsev_stroop_error_BF <- BayesFactor::ttestBF(formula = stroop_errors ~ THI_cat, data = bayes_mild_modsev)
+BF_mild_modsev_stroopError <- describe_posterior(mild_modsev_stroop_error_BF)
+
+#bayesian ttest for number letter sequencing - mild vs modsev
+mild_modsev_nls_BF <- BayesFactor::ttestBF(formula = nls_correct ~ THI_cat, data = bayes_mild_modsev)
+BF_mild_modsev_nls <- describe_posterior(mild_modsev_nls_BF)
+
+#bayesian ttest for keep track task - mild vs modsev
+mild_modsev_keep_BF <- BayesFactor::ttestBF(formula = keepTrack ~ THI_cat, data = bayes_mild_modsev)
+BF_mild_modsev_keep <- describe_posterior(mild_modsev_keep_BF)
+
+#bayesian ttest for RIF - mild vs modsev
+mild_modsev_RIF_BF <- BayesFactor::ttestBF(formula = RIF_Diff ~ THI_cat, data = bayes_mild_modsev)
+BF_mild_modsev_RIF <- describe_posterior(mild_modsev_RIF_BF)
+
+#bayesian ttest for matrix reasoning - mild vs modsev
+mild_modsev_matrix_BF <- BayesFactor::ttestBF(formula = matrixReason ~ THI_cat, data = bayes_mild_modsev)
+BF_mild_modsev_matrix <- describe_posterior(mild_modsev_matrix_BF)
+
+#bayesian ttest for dual task - mild vs modsev
+mild_modsev_dual_BF <- BayesFactor::ttestBF(formula = dual_task_total ~ THI_cat, data = bayes_mild_modsev)
+BF_mild_modsev_dual <- describe_posterior(mild_modsev_dual_BF)
+
+#bayesian ttest for CFQ - mild vs modsev
+mild_modsev_CFQ_BF <- BayesFactor::ttestBF(formula = CFQ ~ THI_cat, data = bayes_mild_modsev)
+BF_mild_modsev_CFQ <- describe_posterior(mild_modsev_CFQ_BF)
+
+#bayesian ttest for RRS - mild vs modsev
+mild_modsev_RRS_BF <- BayesFactor::ttestBF(formula = RRS ~ THI_cat, data = bayes_mild_modsev)
+BF_mild_modsev_RRS<- describe_posterior(mild_modsev_RRS_BF)
+
+#bayesian ttest for CRIq_aged - mild vs modsev
+mild_modsev_CRIq_aged_BF <- BayesFactor::ttestBF(formula = CRIq_aged ~ THI_cat, data = bayes_mild_modsev)
+BF_mild_modsev_CRIq_aged <- describe_posterior(mild_modsev_CRIq_aged_BF)
+
+#bayesian ttest for depression - mild vs modsev
+mild_modsev_depression_BF <- BayesFactor::ttestBF(formula = CRIq_aged ~ THI_cat, data = bayes_mild_modsev)
+BF_mild_modsev_depression <- describe_posterior(mild_modsev_depression_BF)
+
+#bayesian ttest for anxiety - mild vs modsev
+mild_modsev_anxiety_BF <- BayesFactor::ttestBF(formula = DASS_A ~ THI_cat, data = bayes_mild_modsev)
+BF_mild_modsev_anxiety <- describe_posterior(mild_modsev_anxiety_BF)
+
+#bayesian ttest for stress - mild vs modsev
+mild_modsev_stress_BF <- BayesFactor::ttestBF(formula = DASS_S ~ THI_cat, data = bayes_mild_modsev)
+BF_mild_modsev_stress <- describe_posterior(mild_modsev_stress_BF)
+```
+
 ```{r table of bayes factors for control-mild}
 #create table of bayes factors for control vs mild
 control_mild_BF <- data.frame(
@@ -1220,7 +1288,7 @@ control_mild_BF <- data.frame(
     BF_control_mild_stress$BF)
 )
 colnames(control_mild_BF) <- c("name", "bayes_factor")
-control_mild_BF$bayes_factor <- signif(control_mild_BF$bayes_factor, 2)
+control_mild_BF$bayes_factor <- round(control_mild_BF$bayes_factor, 2)
 
 control_mild_BF <- control_mild_BF %>% arrange(desc(bayes_factor))
 ```
@@ -1260,11 +1328,52 @@ control_modsev_BF <- data.frame(
     BF_control_modsev_stress$BF)
 )
 colnames(control_modsev_BF) <- c("name", "bayes_factor")
-control_modsev_BF$bayes_factor <- signif(control_modsev_BF$bayes_factor, 2)
+control_modsev_BF$bayes_factor <- round(control_modsev_BF$bayes_factor, 2)
 
 control_modsev_BF <- control_modsev_BF %>% arrange(desc(bayes_factor))
 ```
 `r knitr::kable(control_modsev_BF)`
+
+```{r table of bayes factors for mild-modsev}
+#create table of bayes factors for mild-modsev
+mild_modsev_BF <- data.frame(
+  c("Retrieval-induced forgetting", 
+    "Number letter sequencing", 
+    "Keep track", 
+    "Matrix reasoning",
+    "Stroop-RT", 
+    "Stroop-errors", 
+    "Switch cost", 
+    "Switch errors", 
+    "Dual task",
+    "CFQ",
+    "RRS",
+    "CRIq_aged",
+    "Depression",
+    "Anxiety",
+    "Stress"),
+  c(BF_mild_modsev_RIF$BF, 
+    BF_mild_modsev_nls$BF, 
+    BF_mild_modsev_keep$BF,
+    BF_mild_modsev_matrix$BF,
+    BF_mild_modsev_stroopRT$BF,
+    BF_mild_modsev_stroopError$BF,
+    BF_mild_modsev_switchCost$BF,
+    BF_mild_modsev_switchError$BF,
+    BF_mild_modsev_dual$BF,
+    BF_mild_modsev_CFQ$BF,
+    BF_mild_modsev_RRS$BF,
+    BF_mild_modsev_CRIq_aged$BF,
+    BF_mild_modsev_depression$BF,
+    BF_mild_modsev_anxiety$BF,
+    BF_mild_modsev_stress$BF)
+)
+colnames(mild_modsev_BF) <- c("name", "bayes_factor")
+mild_modsev_BF$bayes_factor <- round(mild_modsev_BF$bayes_factor, 2)
+
+mild_modsev_BF <- mild_modsev_BF %>% arrange(desc(bayes_factor))
+```
+`r knitr::kable(mild_modsev_BF)`
 #Linear regressions
 ##Data preparation
 ```{r linear regression data preparation}
@@ -1280,7 +1389,7 @@ efit <- efit %>%
          stroop_errors_scaled = scale(stroop_errors),
          switch_cost_scaled = scale(switch_cost),
          rule_errors_scaled = scale(rule_errors),
-         dualTask_wordsDiff_scaled = scale(dualTask_wordsDiff),
+         dual_task_total_scaled = scale(dual_task_total),
          matrixReason_scaled = scale(matrixReason),
          age_scaled = scale(age),
          hearThresh_scaled = scale(hearThresh),
@@ -1288,17 +1397,13 @@ efit <- efit %>%
          DASS_D_scaled = scale(DASS_D),
          DASS_S_scaled = scale(DASS_S)
          )
-
-
-
-
 ```
 
 ##Number-letter sequencing
 ```{r nls THI groups lm}
 nls_lm_tincats <- lm(formula = nls_correct ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S, data = efit)
 
-tidy_nls_lm_tincats <- tidy(nls_lm_tincats)
+tidy_nls_lm_tincats <- tidy(nls_lm_tincats) %>% mutate(task = "nls_correct")
 
 #create formula for calculating standardised partial regression coefficent to check against the scaled model: sp = b * (sd(IV)/sd(DV))
 #stand_partial <- tidy_nls_lm_tincats$estimate[2]* sd(efit$age)/sd(efit$nls_correct) 
@@ -1318,7 +1423,7 @@ ranked_nls_lm_tincats_scaled <- tidy_nls_lm_tincats_scaled %>%
 ```{r keeptrack THI groups lm}
 keepTrack_lm_tincats <- lm(formula = keepTrack ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S, data = efit)
 
-tidy_keepTrack_lm_tincats <- tidy(keepTrack_lm_tincats)
+tidy_keepTrack_lm_tincats <- tidy(keepTrack_lm_tincats) %>% mutate(task = "keep_track_correct")
 
 keepTrack_lm_tincats_scaled <- lm(formula = keepTrack_scaled ~ THI_cat + age_scaled + hearThresh_scaled + DASS_A_scaled + DASS_D_scaled + DASS_S_scaled, data = efit)
 
@@ -1334,7 +1439,7 @@ ranked_keepTrack_lm_tincats_scaled <- tidy_keepTrack_lm_tincats_scaled %>%
 ```{r stroop incong_rt THI groups lm}
 stroopRT_lm_tincats <- lm(formula = stroop_incongruent ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S, data = efit)
 
-tidy_stroopRT_lm_tincats <- tidy(stroopRT_lm_tincats)
+tidy_stroopRT_lm_tincats <- tidy(stroopRT_lm_tincats) %>% mutate(task = "stroop_incongruent_RT")
 
 stroopRT_lm_tincats_scaled <- lm(formula = stroop_incongruent_scaled ~ THI_cat + age_scaled + hearThresh_scaled + DASS_A_scaled + DASS_D_scaled + DASS_S_scaled, data = efit)
 
@@ -1349,7 +1454,7 @@ ranked_stroopRT_lm_tincats_scaled <- tidy_stroopRT_lm_tincats_scaled %>%
 ```{r stroop errors THI groups lm}
 stroopErr_lm_tincats <- lm(formula = stroop_errors ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S, data = efit)
 
-tidy_stroopErr_lm_tincats <- tidy(stroopErr_lm_tincats)
+tidy_stroopErr_lm_tincats <- tidy(stroopErr_lm_tincats) %>% mutate(task = "stroop_errors")
 
 stroopErr_lm_tincats_scaled <- lm(formula = stroop_errors_scaled ~ THI_cat + age_scaled + hearThresh_scaled + DASS_A_scaled + DASS_D_scaled + DASS_S_scaled, data = efit)
 
@@ -1364,7 +1469,7 @@ ranked_stroopErr_lm_tincats_scaled <- tidy_stroopErr_lm_tincats_scaled %>%
 ```{r RIF difference THI groups lm}
 RIF_diff_lm_tincats <- lm(formula = RIF_Diff ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S, data = efit)
 
-tidy_RIF_diff_lm_tincats <- tidy(RIF_diff_lm_tincats)
+tidy_RIF_diff_lm_tincats <- tidy(RIF_diff_lm_tincats) %>% mutate(task = "RIF_difference")
 
 RIF_diff_lm_tincats_scaled <- lm(formula = RIF_Diff_scaled ~ THI_cat + age_scaled + hearThresh_scaled + DASS_A_scaled + DASS_D_scaled + DASS_S_scaled, data = efit)
 
@@ -1380,7 +1485,7 @@ ranked_RIF_diff_lm_tincats_scaled  <- tidy_RIF_diff_lm_tincats_scaled %>%
 ```{r rule switchcost THI groups lm}
 ruleSwitchCost_lm_tincats <- lm(formula = switch_cost ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S, data = efit)
 
-tidy_ruleSwitchCost_lm_tincats <- tidy(ruleSwitchCost_lm_tincats)
+tidy_ruleSwitchCost_lm_tincats <- tidy(ruleSwitchCost_lm_tincats) %>% mutate(task = "rule_switch_cost")
 
 ruleSwitchCost_lm_tincats_scaled <- lm(formula = switch_cost_scaled ~ THI_cat + age_scaled + hearThresh_scaled + DASS_A_scaled + DASS_D_scaled + DASS_S_scaled, data = efit)
 
@@ -1395,7 +1500,7 @@ ranked_ruleSwitchCost_lm_tincats_scaled  <- tidy_ruleSwitchCost_lm_tincats_scale
 ```{r rule errors THI groups lm}
 ruleErr_lm_tincats <- lm(formula = rule_errors ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S, data = efit)
 
-tidy_ruleErr_lm_tincats <- tidy(ruleErr_lm_tincats)
+tidy_ruleErr_lm_tincats <- tidy(ruleErr_lm_tincats) %>% mutate(task = "rule_switch_errors")
 
 ruleErr_lm_tincats_scaled <- lm(formula = rule_errors_scaled ~ THI_cat + age_scaled + hearThresh_scaled + DASS_A_scaled + DASS_D_scaled + DASS_S_scaled, data = efit)
 
@@ -1408,24 +1513,24 @@ ranked_ruleErr_lm_tincats_scaled   <- tidy_ruleErr_lm_tincats_scaled %>%
 ```
 ##Dual task
 ```{r dual task THI groups lm}
-dualTask_lm_tincats <- lm(formula = dualTask_wordsDiff ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S, data = efit)
+dualTask_lm_tincats <- lm(formula = dual_task_total ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S, data = efit)
 
-tidy_dualTask_lm_tincats <- tidy(dualTask_lm_tincats)
+tidy_dualTask_lm_tincats <- tidy(dualTask_lm_tincats) %>% mutate(task = "dual_task_numbers_total")
 
-dualTask_lm_tincats_scaled <- lm(formula = dualTask_wordsDiff_scaled ~ THI_cat + age_scaled + hearThresh_scaled + DASS_A_scaled + DASS_D_scaled + DASS_S_scaled, data = efit)
+dualTask_lm_tincats_scaled <- lm(formula = dual_task_total_scaled ~ THI_cat + age_scaled + hearThresh_scaled + DASS_A_scaled + DASS_D_scaled + DASS_S_scaled, data = efit)
 
 tidy_dualTask_lm_tincats_scaled <- tidy(dualTask_lm_tincats_scaled)
 
 ranked_dualTask_lm_tincats_scaled <- tidy_dualTask_lm_tincats_scaled %>% 
   filter(term != "(Intercept)") %>% 
   mutate(partial_beta_rank = rank(estimate),
-         task = "dual_task_words_diff")
+         task = "dual_task_numbers_total")
 ```
 ##Matrix reasoning
 ```{r matrix reasoning THI groups lm}
 matrixReason_lm_tincats <- lm(formula = matrixReason ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S, data = efit)
 
-tidy_matrixReason_lm_tincats <- tidy(matrixReason_lm_tincats)
+tidy_matrixReason_lm_tincats <- tidy(matrixReason_lm_tincats) %>% mutate(task = "matrix_reasoning")
 
 matrixReason_lm_tincats_scaled <- lm(formula = matrixReason_scaled ~ THI_cat + age_scaled + hearThresh_scaled + DASS_A_scaled + DASS_D_scaled + DASS_S_scaled, data = efit)
 
@@ -1436,6 +1541,27 @@ ranked_matrixReason_lm_tincats_scaled <- tidy_matrixReason_lm_tincats_scaled %>%
   mutate(partial_beta_rank = rank(estimate),
          task = "matrix_reasoning")
 ```
+
+```{r bind tables for all non-scaled regressions}
+all_lm_tincats <- rbind(
+  tidy_nls_lm_tincats,
+  tidy_dualTask_lm_tincats,
+  tidy_keepTrack_lm_tincats,
+  tidy_matrixReason_lm_tincats,
+  tidy_RIF_diff_lm_tincats,
+  tidy_ruleErr_lm_tincats,
+  tidy_ruleSwitchCost_lm_tincats,
+  tidy_stroopErr_lm_tincats,
+  tidy_stroopRT_lm_tincats
+) 
+
+all_lm_tincats$term <- all_lm_tincats$term %>% 
+  str_replace("THI_cat2", "tinnitus") %>% 
+  str_replace("THI_cat3", "bothersome_tinnitus") 
+
+all_lm_tincats <- all_lm_tincats%>% mutate_if(is.numeric, round, digits = 3)
+```
+`r knitr::kable(all_lm_tincats)`
 
 ```{r bind tables of all ranked lm results}
 all_ranked_lm_tincats_scaled <- rbind(
@@ -1454,9 +1580,16 @@ all_ranked_lm_tincats_scaled$term <- all_ranked_lm_tincats_scaled$term %>%
   str_replace("THI_cat2", "tinnitus") %>% 
   str_replace("THI_cat3", "bothersome_tinnitus")
 
-```
+all_ranked_lm_tincats_scaled <- all_ranked_lm_tincats_scaled %>% mutate_if(is.numeric, round, digits = 3)
 
+stat_sig_linear_models <- all_ranked_lm_tincats_scaled %>% filter(p.value < 0.05)
+
+```
+`r knitr::kable(all_ranked_lm_tincats_scaled)`
+
+`r knitr::kable(stat_sig_linear_models)`
 ```{r find ranks of bothersome tinnitus partial beta}
+#create table of bothersome tinnitus group rank and estimates
 bothersome_tinnitus_rank <- all_ranked_lm_tincats_scaled %>%
   filter(term == "bothersome_tinnitus") %>% 
   select(task, partial_beta_rank, estimate)
@@ -1465,18 +1598,32 @@ bothersome_tinnitus_rank$estimate <- round(bothersome_tinnitus_rank$estimate, di
 
 bothersome_tinnitus_rank <- bothersome_tinnitus_rank %>% 
   arrange(partial_beta_rank, estimate)
+#create table of tinnitus group rank and estimates
+tinnitus_rank <- all_ranked_lm_tincats_scaled %>%
+  filter(term == "tinnitus") %>% 
+  select(task, partial_beta_rank, estimate)
 
-all_ranked_lm_tincats_scaled %>% 
-  filter(task == "rule_switch_cost"|
-         task == "rule_switch_errors"|
-         task == "stroop_incongruent_rt"|
-           task == "dual_task_words_diff") %>% 
+tinnitus_rank$estimate <- round(tinnitus_rank$estimate, digits = 2)
+
+tinnitus_rank <- tinnitus_rank %>% 
+  arrange(partial_beta_rank, estimate)
+
+#some sort of table showng top 2 ranking variables by task
+all_task_top_two_ranking <- all_ranked_lm_tincats_scaled %>% 
+  #filter(task == "rule_switch_cost"|
+   #      task == "rule_switch_errors"|
+    #     task == "stroop_incongruent_rt"|
+     #      task == "dual_task_words_diff") %>% 
   filter(partial_beta_rank == 1 |
            partial_beta_rank == 2) %>% 
   select(task,term, partial_beta_rank, estimate) %>% 
-  arrange(partial_beta_rank, estimate)
+  arrange(task,partial_beta_rank, estimate)
 ```
+`r knitr::kable(bothersome_tinnitus_rank)`
 
+`r knitr::kable(tinnitus_rank)`
+
+`r knitr::kable(all_task_top_two_ranking)`
 #Retrieval-induced forgetting analysis
 ```{r means of all practise variables by THI group}
 RIF_mean_table <- efit %>% 
