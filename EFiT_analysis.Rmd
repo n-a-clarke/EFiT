@@ -1099,10 +1099,34 @@ ggsave("SDMplot_tinnitusVS.tiff",plot = SDMplot_tinitusVS, units="in", width=5, 
 tasks_d_to_r <- data.frame(task = control_mild_control_modsev_cohensd_ci$task , r = convert_d_to_r(control_mild_control_modsev_cohensd_ci$cohens_d), group = control_mild_control_modsev_cohensd_ci$group)
 
 control_tinnitus_tasks_d_to_r <- tasks_d_to_r %>% 
-  filter(group == "control vs tinnitus")
+  filter(group == "control vs tinnitus") %>% 
+  mutate(meta_analysis_category = c(
+    "switching",
+    "updating",
+    "fluid intelligence",
+    "updating",
+    "inhibition/glr",
+    "inhibition",
+    "inhibition",
+    "switching",
+    "switching"
+  )) %>% 
+  arrange(r)
 
 control_bothersome_tinnitus_tasks_d_to_r <- tasks_d_to_r %>%
-  filter(group == "control vs bothersome tinnitus")
+  filter(group == "control vs bothersome tinnitus") %>% 
+  mutate(meta_analysis_category = c(
+    "switching",
+    "updating",
+    "fluid intelligence",
+    "updating",
+    "inhibition/glr",
+    "inhibition",
+    "inhibition",
+    "switching",
+    "switching"
+  )) %>% 
+  arrange(r)
 ```
 
 #
@@ -1466,7 +1490,11 @@ efit <- efit %>%
          DASS_A_scaled = scale(DASS_A),
          DASS_D_scaled = scale(DASS_D),
          DASS_S_scaled = scale(DASS_S),
-         CRIq_scaled = scale(CRIq)
+         CRIq_scaled = scale(CRIq),
+         RRS_scaled = scale(RRS),
+         pRIF_RpPlus_scaled = scale(pRIF_RpPlus),
+         pRIF_RpMinus_scaled = scale(pRIF_RpMinus),
+         pRIF_Np_scaled = scale(pRIF_Np)
          )
 ```
 ```{r linear regressions for CRIq}
@@ -1734,6 +1762,248 @@ RIF_mean_table$THI_cat <- RIF_mean_table$THI_cat %>%
 #
 table RIF mean values
 `r knitr::kable(RIF_mean_table)`
+
+```{r linear models of rp_plus, rp_min, and Np}
+rp_plus_lm <- lm(formula = pRIF_RpPlus ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S + RRS, data = efit)
+rp_plus_lm_tidy <- tidy(rp_plus_lm) %>% 
+  mutate(model = "RpPlus")
+
+rp_min_lm <- lm(formula = pRIF_RpMinus ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S+ RRS, data = efit)
+rp_min_lm_tidy <- tidy(rp_min_lm) %>% 
+  mutate(model = "RpMinus")
+
+rp_np_lm <- lm(formula = pRIF_Np ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S +RRS, data = efit)
+rp_np_lm_tidy <- tidy(rp_np_lm) %>% 
+  mutate(model = "Np")
+
+RIF_lms <- rbind.data.frame(rp_plus_lm_tidy, rp_min_lm_tidy, rp_np_lm_tidy)
+
+```
+#
+table RIF linear models
+`r knitr::kable(RIF_lms, digits = 2)`
+
+```{r rstanarm RIF elements THI groups lm}
+bayes_RIF_RpPlus_lm_tincats <- stan_glm(formula = pRIF_RpPlus ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S + RRS, data = efit, seed = 12345)#fit standard model
+
+prior_summary(bayes_RIF_RpPlus_lm_tincats)#priors used for this model
+
+summary_bayes_RIF_RpPlus_lm_tincats <- summary(bayes_RIF_RpPlus_lm_tincats) 
+
+summary_bayes_RIF_RpPlus_lm_tincats<- as.data.frame(summary(bayes_RIF_RpPlus_lm_tincats))
+
+summary_bayes_RIF_RpPlus_lm_tincats <- summary_bayes_RIF_RpPlus_lm_tincats %>%
+  rownames_to_column(var = "IV")
+
+rank_bayes_RIF_RpPlus_lm_tincats<- summary_bayes_RIF_RpPlus_lm_tincats %>% 
+  filter(IV == "THI_cat2"|
+         IV == "THI_cat3"|
+         IV == "age"|
+         IV == "hearThresh"|
+         IV == "DASS_A"|
+         IV == "DASS_D"|
+         IV == "DASS_S" |
+           IV == "RRS") %>% 
+  mutate(partial_beta_rank = rank(mean),
+         task = "RIF_RpPlus") %>% 
+  select(task,IV,mean, partial_beta_rank)
+
+rank_bayes_RIF_RpPlus_lm_tincats$mean <- round(rank_bayes_RIF_RpPlus_lm_tincats$mean, digits = 2)
+
+RIF_RpPlus_posterior_samples <- spread_draws(bayes_RIF_RpPlus_lm_tincats, c(THI_cat3, THI_cat2), seed = 123)
+
+RIF_RpPlus_beta_prob_tinnitus <- mean(RIF_RpPlus_posterior_samples$THI_cat2 < 0) %>% round(digits = 2)
+
+RIF_RpPlus_beta_prob_bothersome_tinnitus <- mean(RIF_RpPlus_posterior_samples$THI_cat3 < 0) %>% round(digits = 2)
+
+# same as above for RpMinus
+bayes_RIF_RpMinus_lm_tincats <- stan_glm(formula = pRIF_RpMinus ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S + RRS, data = efit, seed = 12345)#fit standard model
+
+prior_summary(bayes_RIF_RpMinus_lm_tincats)#priors used for this model
+
+summary_bayes_RIF_RpMinus_lm_tincats <- summary(bayes_RIF_RpMinus_lm_tincats) 
+
+summary_bayes_RIF_RpMinus_lm_tincats<- as.data.frame(summary(bayes_RIF_RpMinus_lm_tincats))
+
+summary_bayes_RIF_RpMinus_lm_tincats <- summary_bayes_RIF_RpMinus_lm_tincats %>%
+  rownames_to_column(var = "IV")
+
+rank_bayes_RIF_RpMinus_lm_tincats<- summary_bayes_RIF_RpMinus_lm_tincats %>% 
+  filter(IV == "THI_cat2"|
+         IV == "THI_cat3"|
+         IV == "age"|
+         IV == "hearThresh"|
+         IV == "DASS_A"|
+         IV == "DASS_D"|
+         IV == "DASS_S" |
+           IV == "RRS") %>% 
+  mutate(partial_beta_rank = rank(mean),
+         task = "RIF_RpMinus") %>% 
+  select(task,IV,mean, partial_beta_rank)
+
+rank_bayes_RIF_RpMinus_lm_tincats$mean <- round(rank_bayes_RIF_RpMinus_lm_tincats$mean, digits = 2)
+
+RIF_RpMinus_posterior_samples <- spread_draws(bayes_RIF_RpMinus_lm_tincats, c(THI_cat3, THI_cat2), seed = 123)
+
+RIF_RpMinus_beta_prob_tinnitus <- mean(RIF_RpMinus_posterior_samples$THI_cat2 < 0) %>% round(digits = 2)
+
+RIF_RpMinus_beta_prob_bothersome_tinnitus <- mean(RIF_RpMinus_posterior_samples$THI_cat3 < 0) %>% round(digits = 2)
+
+# same as above for Np
+bayes_RIF_Np_lm_tincats <- stan_glm(formula = pRIF_Np ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S + RRS, data = efit, seed = 12345)#fit standard model
+
+prior_summary(bayes_RIF_Np_lm_tincats)#priors used for this model
+
+summary_bayes_RIF_Np_lm_tincats <- summary(bayes_RIF_Np_lm_tincats) 
+
+summary_bayes_RIF_Np_lm_tincats<- as.data.frame(summary(bayes_RIF_Np_lm_tincats))
+
+summary_bayes_RIF_Np_lm_tincats <- summary_bayes_RIF_Np_lm_tincats %>%
+  rownames_to_column(var = "IV")
+
+rank_bayes_RIF_Np_lm_tincats<- summary_bayes_RIF_Np_lm_tincats %>% 
+  filter(IV == "THI_cat2"|
+         IV == "THI_cat3"|
+         IV == "age"|
+         IV == "hearThresh"|
+         IV == "DASS_A"|
+         IV == "DASS_D"|
+         IV == "DASS_S" |
+           IV == "RRS") %>% 
+  mutate(partial_beta_rank = rank(mean),
+         task = "RIF_Np") %>% 
+  select(task,IV,mean, partial_beta_rank)
+
+rank_bayes_RIF_Np_lm_tincats$mean <- round(rank_bayes_RIF_Np_lm_tincats$mean, digits = 2)
+
+RIF_Np_posterior_samples <- spread_draws(bayes_RIF_Np_lm_tincats, c(THI_cat3, THI_cat2), seed = 123)
+
+RIF_Np_beta_prob_tinnitus <- mean(RIF_Np_posterior_samples$THI_cat2 < 0) %>% round(digits = 2)
+
+RIF_Np_beta_prob_bothersome_tinnitus <- mean(RIF_Np_posterior_samples$THI_cat3 < 0) %>% round(digits = 2)
+```
+
+```{r rstanarm RIF elements SCALED THI groups lm}
+bayes_RIF_RpPlus_lm_tincats_scaled <- stan_glm(formula = pRIF_RpPlus_scaled ~ THI_cat + age_scaled + hearThresh_scaled + DASS_A_scaled + DASS_D_scaled + DASS_S_scaled + RRS_scaled, data = efit, seed = 12345)#fit standard model
+
+prior_summary(bayes_RIF_RpPlus_lm_tincats_scaled)#priors used for this model
+
+summary_bayes_RIF_RpPlus_lm_tincats_scaled <- summary(bayes_RIF_RpPlus_lm_tincats_scaled) 
+
+summary_bayes_RIF_RpPlus_lm_tincats_scaled<- as.data.frame(summary(bayes_RIF_RpPlus_lm_tincats_scaled))
+
+summary_bayes_RIF_RpPlus_lm_tincats_scaled <- summary_bayes_RIF_RpPlus_lm_tincats_scaled %>%
+  rownames_to_column(var = "IV")
+
+rank_bayes_RIF_RpPlus_lm_tincats_scaled<- summary_bayes_RIF_RpPlus_lm_tincats_scaled %>% 
+  filter(IV == "THI_cat2"|
+         IV == "THI_cat3"|
+         IV == "age_scaled"|
+         IV == "hearThresh_scaled"|
+         IV == "DASS_scaled"|
+         IV == "DASS_D_scaled"|
+         IV == "DASS_S_scaled" |
+           IV == "RRS_scaled") %>% 
+  mutate(partial_beta_rank = rank(mean),
+         task = "RIF_RpPlus") %>% 
+  select(task,IV,mean, partial_beta_rank)
+
+rank_bayes_RIF_RpPlus_lm_tincats_scaled$mean <- round(rank_bayes_RIF_RpPlus_lm_tincats_scaled$mean, digits = 2)
+
+RIF_RpPlus_scaled_posterior_samples <- spread_draws(bayes_RIF_RpPlus_lm_tincats_scaled, c(THI_cat3, THI_cat2), seed = 123)
+
+RIF_RpPlus_partial_beta_prob_tinnitus <- mean(RIF_RpPlus_scaled_posterior_samples$THI_cat2 < 0) %>% round(digits = 2)
+
+RIF_RpPlus_partial_beta_prob_bothersome_tinnitus <- mean(RIF_RpPlus_scaled_posterior_samples$THI_cat3 < 0) %>% round(digits = 2)
+
+# same as above for RpMinus
+bayes_RIF_RpMinus_lm_tincats_scaled <- stan_glm(formula = pRIF_RpMinus_scaled ~ THI_cat + age_scaled + hearThresh_scaled + DASS_A_scaled + DASS_D_scaled + DASS_S_scaled + RRS_scaled, data = efit, seed = 12345)#fit standard model
+
+prior_summary(bayes_RIF_RpMinus_lm_tincats_scaled)#priors used for this model
+
+summary_bayes_RIF_RpMinus_lm_tincats_scaled <- summary(bayes_RIF_RpMinus_lm_tincats_scaled) 
+
+summary_bayes_RIF_RpMinus_lm_tincats_scaled<- as.data.frame(summary(bayes_RIF_RpMinus_lm_tincats_scaled))
+
+summary_bayes_RIF_RpMinus_lm_tincats_scaled <- summary_bayes_RIF_RpMinus_lm_tincats_scaled %>%
+  rownames_to_column(var = "IV")
+
+rank_bayes_RIF_RpMinus_lm_tincats_scaled<- summary_bayes_RIF_RpMinus_lm_tincats_scaled %>% 
+  filter(IV == "THI_cat2"|
+         IV == "THI_cat3"|
+         IV == "age_scaled"|
+         IV == "hearThresh_scaled"|
+         IV == "DASS_scaled"|
+         IV == "DASS_D_scaled"|
+         IV == "DASS_S_scaled" |
+           IV == "RRS_scaled") %>% 
+  mutate(partial_beta_rank = rank(mean),
+         task = "RIF_RpMinus") %>% 
+  select(task,IV,mean, partial_beta_rank)
+
+rank_bayes_RIF_RpMinus_lm_tincats_scaled$mean <- round(rank_bayes_RIF_RpMinus_lm_tincats_scaled$mean, digits = 2)
+
+RIF_RpMinus_scaled_posterior_samples <- spread_draws(bayes_RIF_RpMinus_lm_tincats_scaled, c(THI_cat3, THI_cat2), seed = 123)
+
+RIF_RpMinus_partial_beta_prob_tinnitus <- mean(RIF_RpMinus_scaled_posterior_samples$THI_cat2 < 0) %>% round(digits = 2)
+
+RIF_RpMinus_partial_beta_prob_bothersome_tinnitus <- mean(RIF_RpMinus_scaled_posterior_samples$THI_cat3 < 0) %>% round(digits = 2)
+
+# same as above for Np
+bayes_RIF_Np_lm_tincats_scaled <- stan_glm(formula = pRIF_Np_scaled ~ THI_cat + age_scaled + hearThresh_scaled + DASS_A_scaled + DASS_D_scaled + DASS_S_scaled + RRS_scaled, data = efit, seed = 12345)#fit standard model
+
+prior_summary(bayes_RIF_Np_lm_tincats_scaled)#priors used for this model
+
+summary_bayes_RIF_Np_lm_tincats_scaled <- summary(bayes_RIF_Np_lm_tincats_scaled) 
+
+summary_bayes_RIF_Np_lm_tincats_scaled<- as.data.frame(summary(bayes_RIF_Np_lm_tincats_scaled))
+
+summary_bayes_RIF_Np_lm_tincats_scaled <- summary_bayes_RIF_Np_lm_tincats_scaled %>%
+  rownames_to_column(var = "IV")
+
+rank_bayes_RIF_Np_lm_tincats_scaled<- summary_bayes_RIF_Np_lm_tincats_scaled %>% 
+  filter(IV == "THI_cat2"|
+         IV == "THI_cat3"|
+         IV == "age_scaled"|
+         IV == "hearThresh_scaled"|
+         IV == "DASS_scaled"|
+         IV == "DASS_D_scaled"|
+         IV == "DASS_S_scaled" |
+           IV == "RRS_scaled") %>% 
+  mutate(partial_beta_rank = rank(mean),
+         task = "RIF_Np") %>% 
+  select(task,IV,mean, partial_beta_rank)
+
+rank_bayes_RIF_Np_lm_tincats_scaled$mean <- round(rank_bayes_RIF_Np_lm_tincats_scaled$mean, digits = 2)
+
+RIF_Np_scaled_posterior_samples <- spread_draws(bayes_RIF_Np_lm_tincats_scaled, c(THI_cat3, THI_cat2), seed = 123)
+
+RIF_Np_partial_beta_prob_tinnitus <- mean(RIF_Np_scaled_posterior_samples$THI_cat2 < 0) %>% round(digits = 2)
+
+RIF_Np_partial_beta_prob_bothersome_tinnitus <- mean(RIF_Np_scaled_posterior_samples$THI_cat3 < 0) %>% round(digits = 2)
+```
+
+```{r create table of RRS estimates and non-zero probs for beta tinnitus groups}
+rbind.data.frame(rank_bayes_RIF_RpPlus_lm_tincats_scaled, rank_bayes_RIF_RpMinus_lm_tincats_scaled, rank_bayes_RIF_Np_lm_tincats_scaled) %>% 
+  filter(IV == "RRS_scaled")#create RRS coefficient table
+
+
+tin_RIF_table_plus <- rank_bayes_RIF_RpPlus_lm_tincats_scaled %>% 
+  filter(IV == "THI_cat2" | IV == "THI_cat3")
+
+tin_RIF_table_minus <- rank_bayes_RIF_RpMinus_lm_tincats_scaled %>% 
+  filter(IV == "THI_cat2" | IV == "THI_cat3")
+
+tin_RIF_table_Np <- rank_bayes_RIF_Np_lm_tincats_scaled %>% 
+  filter(IV == "THI_cat2" | IV == "THI_cat3")
+
+all_tin_RIF_table <- rbind(tin_RIF_table_plus, tin_RIF_table_minus, tin_RIF_table_Np) 
+
+
+recode(all_tin_RIF_tablw$IV, "THI_cat2" == "tinnitus")
+
+```
+
 
 #BAYESIAN LINEAR MODELS
 ##Number-letter sequencing
