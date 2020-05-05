@@ -1910,11 +1910,13 @@ rank_bayes_RIF_RpPlus_lm_tincats_scaled<- summary_bayes_RIF_RpPlus_lm_tincats_sc
 
 rank_bayes_RIF_RpPlus_lm_tincats_scaled$mean <- round(rank_bayes_RIF_RpPlus_lm_tincats_scaled$mean, digits = 2)
 
-RIF_RpPlus_scaled_posterior_samples <- spread_draws(bayes_RIF_RpPlus_lm_tincats_scaled, c(THI_cat3, THI_cat2), seed = 123)
+RIF_RpPlus_scaled_posterior_samples <- spread_draws(bayes_RIF_RpPlus_lm_tincats_scaled, c(THI_cat3, THI_cat2, RRS_scaled), seed = 123)
 
 RIF_RpPlus_partial_beta_prob_tinnitus <- mean(RIF_RpPlus_scaled_posterior_samples$THI_cat2 < 0) %>% round(digits = 2)
 
 RIF_RpPlus_partial_beta_prob_bothersome_tinnitus <- mean(RIF_RpPlus_scaled_posterior_samples$THI_cat3 < 0) %>% round(digits = 2)
+
+RIF_RpPlus_partial_beta_prob_RRS_scaled <- mean(RIF_RpPlus_scaled_posterior_samples$RRS_scaled < 0) %>% round(digits = 2)
 
 # same as above for RpMinus
 bayes_RIF_RpMinus_lm_tincats_scaled <- stan_glm(formula = pRIF_RpMinus_scaled ~ THI_cat + age_scaled + hearThresh_scaled + DASS_A_scaled + DASS_D_scaled + DASS_S_scaled + RRS_scaled, data = efit, seed = 12345)#fit standard model
@@ -1943,11 +1945,13 @@ rank_bayes_RIF_RpMinus_lm_tincats_scaled<- summary_bayes_RIF_RpMinus_lm_tincats_
 
 rank_bayes_RIF_RpMinus_lm_tincats_scaled$mean <- round(rank_bayes_RIF_RpMinus_lm_tincats_scaled$mean, digits = 2)
 
-RIF_RpMinus_scaled_posterior_samples <- spread_draws(bayes_RIF_RpMinus_lm_tincats_scaled, c(THI_cat3, THI_cat2), seed = 123)
+RIF_RpMinus_scaled_posterior_samples <- spread_draws(bayes_RIF_RpMinus_lm_tincats_scaled, c(THI_cat3, THI_cat2, RRS_scaled), seed = 123)
 
 RIF_RpMinus_partial_beta_prob_tinnitus <- mean(RIF_RpMinus_scaled_posterior_samples$THI_cat2 < 0) %>% round(digits = 2)
 
 RIF_RpMinus_partial_beta_prob_bothersome_tinnitus <- mean(RIF_RpMinus_scaled_posterior_samples$THI_cat3 < 0) %>% round(digits = 2)
+
+RIF_RpMinus_partial_beta_prob_RRS_scaled <- mean(RIF_RpMinus_scaled_posterior_samples$RRS_scaled < 0) %>% round(digits = 2)
 
 # same as above for Np
 bayes_RIF_Np_lm_tincats_scaled <- stan_glm(formula = pRIF_Np_scaled ~ THI_cat + age_scaled + hearThresh_scaled + DASS_A_scaled + DASS_D_scaled + DASS_S_scaled + RRS_scaled, data = efit, seed = 12345)#fit standard model
@@ -1976,34 +1980,69 @@ rank_bayes_RIF_Np_lm_tincats_scaled<- summary_bayes_RIF_Np_lm_tincats_scaled %>%
 
 rank_bayes_RIF_Np_lm_tincats_scaled$mean <- round(rank_bayes_RIF_Np_lm_tincats_scaled$mean, digits = 2)
 
-RIF_Np_scaled_posterior_samples <- spread_draws(bayes_RIF_Np_lm_tincats_scaled, c(THI_cat3, THI_cat2), seed = 123)
+RIF_Np_scaled_posterior_samples <- spread_draws(bayes_RIF_Np_lm_tincats_scaled, c(THI_cat3, THI_cat2, RRS_scaled), seed = 123)
 
 RIF_Np_partial_beta_prob_tinnitus <- mean(RIF_Np_scaled_posterior_samples$THI_cat2 < 0) %>% round(digits = 2)
 
 RIF_Np_partial_beta_prob_bothersome_tinnitus <- mean(RIF_Np_scaled_posterior_samples$THI_cat3 < 0) %>% round(digits = 2)
+
+RIF_Np_partial_beta_prob_RRS_scaled <- mean(RIF_Np_scaled_posterior_samples$RRS_scaled < 0) %>% round(digits = 2)
+
+#create scaled beta bayes table for all models
+
+bayesRIFcat_lmtable <- rbind(rank_bayes_RIF_RpPlus_lm_tincats_scaled,
+      rank_bayes_RIF_RpMinus_lm_tincats_scaled,
+      rank_bayes_RIF_Np_lm_tincats_scaled)
 ```
+#
+bayes RIF category full GLM table
 
+`r knitr::kable(bayesRIFcat_lmtable)`
 ```{r create table of RRS estimates and non-zero probs for beta tinnitus groups}
-rbind.data.frame(rank_bayes_RIF_RpPlus_lm_tincats_scaled, rank_bayes_RIF_RpMinus_lm_tincats_scaled, rank_bayes_RIF_Np_lm_tincats_scaled) %>% 
-  filter(IV == "RRS_scaled")#create RRS coefficient table
+RRS_partial_beta_table <- rbind.data.frame(rank_bayes_RIF_RpPlus_lm_tincats_scaled, rank_bayes_RIF_RpMinus_lm_tincats_scaled, rank_bayes_RIF_Np_lm_tincats_scaled) %>% 
+  filter(IV == "RRS_scaled") %>% 
+  mutate(less_non_zero_prob = c(
+    RIF_RpPlus_partial_beta_prob_RRS_scaled,
+    RIF_RpMinus_partial_beta_prob_RRS_scaled,
+    RIF_Np_partial_beta_prob_RRS_scaled),
+    more_non_zero_prob = 1-less_non_zero_prob)
 
 
-tin_RIF_table_plus <- rank_bayes_RIF_RpPlus_lm_tincats_scaled %>% 
+RRS_partial_beta_table <-  RRS_partial_beta_table %>%  select(-IV)#create RRS coefficient table
+
+
+tin_RIF_table_plus <- rank_bayes_RIF_RpPlus_lm_tincats %>% 
   filter(IV == "THI_cat2" | IV == "THI_cat3")
 
-tin_RIF_table_minus <- rank_bayes_RIF_RpMinus_lm_tincats_scaled %>% 
+tin_RIF_table_minus <- rank_bayes_RIF_RpMinus_lm_tincats %>% 
   filter(IV == "THI_cat2" | IV == "THI_cat3")
 
-tin_RIF_table_Np <- rank_bayes_RIF_Np_lm_tincats_scaled %>% 
+tin_RIF_table_Np <- rank_bayes_RIF_Np_lm_tincats %>% 
   filter(IV == "THI_cat2" | IV == "THI_cat3")
 
 all_tin_RIF_table <- rbind(tin_RIF_table_plus, tin_RIF_table_minus, tin_RIF_table_Np) 
 
 
-recode(all_tin_RIF_tablw$IV, "THI_cat2" == "tinnitus")
+all_tin_RIF_table$IV <- recode(all_tin_RIF_table$IV, THI_cat2 = "tinnitus", THI_cat3 = "bothersome tinnitus")
+
+all_tin_RIF_table <- all_tin_RIF_table %>% mutate(less_non_zero_prob = c(
+  RIF_RpPlus_beta_prob_tinnitus,
+    RIF_RpPlus_beta_prob_bothersome_tinnitus,
+    RIF_RpMinus_beta_prob_tinnitus, 
+    RIF_RpMinus_beta_prob_bothersome_tinnitus,
+    RIF_Np_beta_prob_tinnitus,
+    RIF_Np_beta_prob_bothersome_tinnitus
+  ),
+  more_non_zero_prob = 1-less_non_zero_prob)
 
 ```
+#
+RRS partial betas
+`r knitr::kable(RRS_partial_beta_table)`
 
+#
+RIF tinnitus and bothersome tinnitus coefficients and beta-probabilities
+`r knitr::kable(all_tin_RIF_table)`
 
 #BAYESIAN LINEAR MODELS
 ##Number-letter sequencing
