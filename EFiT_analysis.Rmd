@@ -2428,6 +2428,36 @@ all_bayes_ranked_lm_tincats_scaled$IV <- all_bayes_ranked_lm_tincats_scaled$IV %
 
 ```
 
+```{r ratio of beta weights for bothersome tinnitus and tinnitus}
+#make a vector of all the bothersome tinnitus beta weights
+both_vec <- c(rep(all_bayes_ranked_lm_tincats_scaled[2,3], 7),
+  rep(all_bayes_ranked_lm_tincats_scaled[9,3], 7),
+  rep(all_bayes_ranked_lm_tincats_scaled[16,3], 7),
+  rep(all_bayes_ranked_lm_tincats_scaled[23,3], 7),
+  rep(all_bayes_ranked_lm_tincats_scaled[30,3], 7),
+  rep(all_bayes_ranked_lm_tincats_scaled[37,3], 7),
+  rep(all_bayes_ranked_lm_tincats_scaled[44,3], 7),
+  rep(all_bayes_ranked_lm_tincats_scaled[51,3], 7),
+  rep(all_bayes_ranked_lm_tincats_scaled[58,3], 7))
+
+#mutate to ratios by vector dividing estimate column 
+
+bothersome_beta_ratio <- all_bayes_ranked_lm_tincats_scaled %>% 
+      mutate(bothersome_vector = both_vec,
+        bother_beta_ratio = both_vec/estimate) %>% 
+  select(task,IV,
+         bothersome_vector, estimate, bother_beta_ratio) %>% arrange(IV, desc(bother_beta_ratio)) %>% 
+  filter(IV != "bothersome_tinnitus",
+         bother_beta_ratio > 2 | bother_beta_ratio < -2)
+#filtered to beta ratios where the x2 difference between bothersome tinnitus
+
+
+
+```
+#
+bothersome beta ratios
+`r knitr::kable(bothersome_beta_ratio, digits = 2)`
+
 ```{r find bayes ranks of bothersome tinnitus partial beta}
 #table of probability estimate that coefficient representes poor performance for bothersome tinnitus
 bayes_bothersome_tinnitus_rank <- all_bayes_ranked_lm_tincats_scaled %>%
