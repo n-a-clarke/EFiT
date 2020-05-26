@@ -22,6 +22,8 @@ df$participant <- as.factor(df$participant)
 df <- df %>% 
   filter(is.na(trials.thisTrialN ))#filter out practise trials
 
+df <- df %>% filter(participant != 79)#remove participant 79
+
 df <- df %>% 
   mutate(
     THI_cat = ifelse(
@@ -29,97 +31,188 @@ df <- df %>%
         THI > 0 & THI <= 37, "mild", "none"
       ))) #add a categorical variable with the groups split by THI scores
 
-testing <- df %>% filter(participant ==2)
-
 #create function that prints 0 for non-switch and 1 for switch
-
 is_switch <- function(z) {
   ifelse(df$rule[z] == df$rule[z-1],0,1)
 }
-
-is_switch(21)
+#vector of values to iterate over - function works by subtracting 1 from current position, so needs to start at 2nd row
 x <- c(2:length(df$rule))
+#use function over above vector
 switch_trial <- map(x, is_switch) %>% unlist()
+#prepend 0 to vector as this couldn't have been a switch trial
 switch_trial <- prepend(switch_trial, 0, before =  1)
-
+#add this vector to main dataframe
 df <- df %>% mutate(is.switch = switch_trial)
-
-validate <- df %>% select(rule, is.switch)
-
-first_trial <- seq(1, length(df$rule), 180)#create vector of first trials for each participant
+#create vector that corresponds to first trial for each participant by sequencing from 1 to length of df counting in 180
+first_trial <- seq(1, length(df$rule), 180)
 
 first_gone_switch <- df[-first_trial,]#get rid of first trial for each participant as it can't be a switch trial
-
+#filter only correct and switch trials
 switch_full <- first_gone_switch %>% filter(is.switch == 1,
                              mainResp.corr == 1)
-
+#create ordered tinnitus category factor
 switch_full$THI_cat <- as.factor(switch_full$THI_cat)
 switch_full$THI_cat <- ordered(switch_full$THI_cat, levels = c("none", "mild", "modsev"))
-
+#rescale rts to milliseconds
 switch_full <- switch_full %>% mutate(switch_response_time = mainResp.rt * 1000)
 
-switch_trials_mod <- brm(data = switch_full,
-                         switch_response_time ~ 1 + THI_cat + scale(age) + scale(hearThresh) + scale(DASS_D) + scale(DASS_A) + scale(DASS_S) + (1|participant),
-            file = "switch_trials",
+#histogram of remaining rts
+switch_full %>% ggplot(aes(x = switch_response_time)) +
+  geom_histogram(bins = 50)
+
+
+outliers_200_4000 <- switch_full %>% 
+  filter(switch_response_time < 200 |
+         switch_response_time > 4000)
+
+switch_200_4000_cut <- switch_full %>% 
+  filter(switch_response_time > 200 &
+           switch_response_time < 4000)
+
+#calculate proportion of outliers removed
+(nrow(outliers_200_4000)/nrow(switch_full)) * 100
+
+#run 200ms - 4000ms models, scaled and unscaled predictors
+switch_trials_scaled_mod <- brm(data = switch_200_4000_cut,
+                         switch_response_time ~ 1 +
+                           THI_cat + 
+                           scale(age) +
+                           scale(hearThresh) +
+                           scale(DASS_D) +
+                           scale(DASS_A) +
+                           scale(DASS_S) +
+                           (1|participant),
+            file = "switch_trials_scaled_preds_200_4000ms",
             family = shifted_lognormal(),
             iter = 6000, warmup = 500, chains = 4, cores = 4,
             seed = 1234)
+#unscaled model
+switch_trials_mod <- brm(data = switch_200_4000_cut,
+                                switch_response_time ~ 1 +
+                                  THI_cat + 
+                           age +
+                                  hearThresh +
+                                  DASS_D +
+                                  DASS_A +
+                                  DASS_S +
+                                  (1|participant),
+                                file = "switch_trials_200_4000ms",
+                                family = shifted_lognormal(),
+                                iter = 6000, warmup = 500, chains = 4, cores = 4,
+                                seed = 1234)
 
+#load models from RDS objects
+switch_trials_scaled_mod <- readRDS("switch_trials_scaled_preds_200_4000ms.rds")
+switch_trials_mod <- readRDS("switch_trials_200_4000ms.rds")
+#model summarires
+summary(switch_trials_scaled_mod)
 summary(switch_trials_mod)
-
-marginal_effects(switch_trials_mod)
-
+#pp checks - contrast this with the normal fit
 pp_check(switch_trials_mod)
+pp_check(switch_trials_scaled_mod)
+#marginal effects
+marginal_effects(switch_trials_scaled_mod)
 
+#save marginal effects as ggplot objects
 abc <- plot(marginal_effects(switch_trials_mod))
-
+#manipulate plot code
 abc$THI_cat +
   ylab("response time") +
   xlab("group")+
   cowplot::theme_minimal_grid()
 
-hypothesis(switch_trials_mod, 'THI_cat.Q  > Intercept')  # Numerically
+#Bayes factor for paramter differences
+hypothesis(switch_trials_mod, 'THI_cat.L  > 0')  # Numerically
 
-summary(switch_trials_mod)
-
-116.93 + exp(7.62)
+#code for transforming paramter values back: ndt + exp(predictor)
+12.21 + exp(7.08)
 
 bother_switch_estimate <- 116.93 + exp(7.62+0.01)
 
-2175.98-2155.492
 
-cde <- marginal_effects(switch_trials_mod, method='predict')
+outliers_200_5000 <- switch_full %>% 
+  filter(switch_response_time < 200 |
+           switch_response_time > 5000)
 
-###same model for non-switch
-non_switch_full <- first_gone_switch %>% filter(is.switch == 0,
-                                            mainResp.corr == 1)
+switch_200_5000_cut <- switch_full %>% 
+  filter(switch_response_time > 200 &
+           switch_response_time < 5000)
 
-non_switch_full$THI_cat <- as.factor(non_switch_full$THI_cat)
-non_switch_full$THI_cat <- ordered(non_switch_full$THI_cat, levels = c("none", "mild", "modsev"))
+#calculate proportion of outliers removed
+(nrow(outliers_200_5000)/nrow(switch_full)) * 100
 
-non_switch_full <- non_switch_full %>% mutate(switch_response_time = mainResp.rt * 1000)
+#run 200ms - 5000ms models, scaled and unscaled predictors
+switch_trials_scaled_mod_5000 <- brm(data = switch_200_5000_cut,
+                                switch_response_time ~ 1 +
+                                  THI_cat + 
+                                  scale(age) +
+                                  scale(hearThresh) +
+                                  scale(DASS_D) +
+                                  scale(DASS_A) +
+                                  scale(DASS_S) +
+                                  (1|participant),
+                                file = "switch_trials_scaled_preds_200_5000ms",
+                                family = shifted_lognormal(),
+                                iter = 6000, warmup = 500, chains = 4, cores = 4,
+                                seed = 1234)
 
-non-switch_trials_mod <- brm(data = non_switch_full,
-                         switch_response_time ~ 1 + THI_cat + scale(age) + scale(hearThresh) + scale(DASS_D) + scale(DASS_A) + scale(DASS_S) + (1|participant),
-                         file = "non_switch_trials",
-                         family = shifted_lognormal(),
-                         iter = 6000, warmup = 500, chains = 4, cores = 4,
-                         seed = 1234)
+#model summarires
+summary(switch_trials_scaled_mod_5000)
+#pp checks - contrast this with the normal fit
+pp_check(switch_trials_scaled_mod_5000)
+#marginal effects
+conditional_effects(switch_trials_scaled_mod_5000)
 
-marginal_effects(sure)
+#now with 15% outliers removed
+outliers_200_3500 <- switch_full %>% 
+  filter(switch_response_time < 200 |
+           switch_response_time > 3500)
 
-summary(sure)
+switch_200_3500_cut <- switch_full %>% 
+  filter(switch_response_time > 200 &
+           switch_response_time < 3500)
 
-sure <- readRDS("non_switch_trials.rds")
+#calculate proportion of outliers removed
+(nrow(outliers_200_3500)/nrow(switch_full)) * 100
 
-bother_non_switch_estimate <- 354.93 + exp(7.10-0.02)
+#run 200ms - 3500ms models, scaled and unscaled predictors
+switch_trials_scaled_mod_3500 <- brm(data = switch_200_3500_cut,
+                                     switch_response_time ~ 1 +
+                                       THI_cat + 
+                                       scale(age) +
+                                       scale(hearThresh) +
+                                       scale(DASS_D) +
+                                       scale(DASS_A) +
+                                       scale(DASS_S) +
+                                       (1|participant),
+                                     file = "switch_trials_scaled_preds_200_3500ms",
+                                     family = shifted_lognormal(),
+                                     iter = 6000, warmup = 500, chains = 4, cores = 4,
+                                     seed = 1234)
 
-control_non_switch_estimate <- 354.93 + exp(7.10)
+switch_trials_scaled_mod_3500 <- readRDS("switch_trials_scaled_preds_200_3500ms.rds")
 
-control_switch_estimate <- 116.93 + exp(7.62)
+conditional_effects(switch_trials_scaled_mod_3500)
 
-bother_switch_cost <- bother_switch_estimate - bother_non_switch_estimate
+summary(switch_trials_scaled_mod_3500)
+#run 200 - 4000ms model again with normal prior for ppc illustration
 
-control_switch_cost <- control_switch_estimate - control_non_switch_estimate
+#run 200ms - 4000ms models, scaled and unscaled predictors
+switch_trials_scaled_4000_norm <- brm(data = switch_200_4000_cut,
+                                switch_response_time ~ 1 +
+                                  THI_cat + 
+                                  scale(age) +
+                                  scale(hearThresh) +
+                                  scale(DASS_D) +
+                                  scale(DASS_A) +
+                                  scale(DASS_S) +
+                                  (1|participant),
+                                file = "normal_switch_trials_scaled_preds_200_4000ms",
+                                family = gaussian(),
+                                iter = 6000, warmup = 500, chains = 4, cores = 4,
+                                seed = 1234)
 
-bother_switch_cost -control_switch_cost
+pp_check(switch_trials_scaled_4000_norm)
+pp_check(switch_trials_scaled_mod)
+
+conditional_effects(switch_trials_scaled_4000_norm)
