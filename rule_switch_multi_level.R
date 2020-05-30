@@ -1,6 +1,8 @@
 library(brms)
 library(readxl)
 library(tidyverse)
+library(cowplot)
+library(patchwork)
 
 files <- dir(pattern = "*.csv")
 mainSet <- read_xlsx("EFiT_Main data set_5MARCH2020.xlsx") %>%
@@ -27,8 +29,8 @@ df <- df %>% filter(participant != 79)#remove participant 79
 df <- df %>% 
   mutate(
     THI_cat = ifelse(
-      THI >= 38 ,"modsev", ifelse(
-        THI > 0 & THI <= 37, "mild", "none"
+      THI >= 38 ,"3", ifelse(
+        THI > 0 & THI <= 37, "2", "1"
       ))) #add a categorical variable with the groups split by THI scores
 
 #create function that prints 0 for non-switch and 1 for switch
@@ -156,6 +158,7 @@ switch_trials_scaled_mod_5000 <- brm(data = switch_200_5000_cut,
                                 iter = 6000, warmup = 500, chains = 4, cores = 4,
                                 seed = 1234)
 
+switch_trials_scaled_mod_5000 <- readRDS("switch_trials_scaled_preds_200_5000ms.rds")
 #model summarires
 summary(switch_trials_scaled_mod_5000)
 #pp checks - contrast this with the normal fit
@@ -198,7 +201,7 @@ summary(switch_trials_scaled_mod_3500)
 #run 200 - 4000ms model again with normal prior for ppc illustration
 
 #run 200ms - 4000ms models, scaled and unscaled predictors
-switch_trials_scaled_4000_norm <- brm(data = switch_200_4000_cut,
+switch_trials_scaled_5000_norm <- brm(data = switch_200_5000_cut,
                                 switch_response_time ~ 1 +
                                   THI_cat + 
                                   scale(age) +
@@ -207,12 +210,60 @@ switch_trials_scaled_4000_norm <- brm(data = switch_200_4000_cut,
                                   scale(DASS_A) +
                                   scale(DASS_S) +
                                   (1|participant),
-                                file = "normal_switch_trials_scaled_preds_200_4000ms",
+                                file = "normal_switch_trials_scaled_preds_200_5000ms",
                                 family = gaussian(),
                                 iter = 6000, warmup = 500, chains = 4, cores = 4,
                                 seed = 1234)
 
-pp_check(switch_trials_scaled_4000_norm)
-pp_check(switch_trials_scaled_mod)
+switch_trials_scaled_5000_norm <- readRDS("normal_switch_trials_scaled_preds_200_5000ms.rds")
 
-conditional_effects(switch_trials_scaled_4000_norm)
+switch_ppcheck_5000_norm <- pp_check(switch_trials_scaled_5000_norm)
+switch_ppcheck_5000 <- pp_check(switch_trials_scaled_mod_5000)
+
+switch_ppcheck_5000_norm <- switch_ppcheck_5000_norm +
+  xlim(0,6500) +
+  theme_cowplot()
+
+switch_ppcheck_5000 <- switch_ppcheck_5000 +
+  xlim(0,6500) +
+  theme_cowplot()
+
+switch_ppcheck_comp <- switch_ppcheck_5000_norm + switch_ppcheck_5000
+
+ggsave("switch_5000_ppcheck_comp.tiff", switch_ppcheck_comp)
+
+switch_5000_condeff <- plot(conditional_effects(switch_trials_scaled_mod_5000))
+
+#tinnitus condeff plot
+tinnitus_switch_condeff <- switch_5000_condeff$THI_cat +
+  theme_cowplot()
+ggsave("switch_condeff_tinnitus.tiff", tinnitus_switch_condeff)
+
+#age condeff plot
+age_switch_condeff <- switch_5000_condeff$age +
+  theme_cowplot()
+ggsave("switch_condeff_age.tiff", age_switch_condeff)
+
+#hearing condeff plot
+hearthresh_switch_condeff <- switch_5000_condeff$hearThresh +
+  theme_cowplot()
+ggsave("switch_condeff_hearthresh.tiff", hearthresh_switch_condeff)
+
+#depression condeff plot
+depression_switch_condeff <- switch_5000_condeff$DASS_D +
+  theme_cowplot()
+ggsave("switch_condeff_depression.tiff", depression_switch_condeff)
+#anxiety condeff plot
+anxiety_switch_condeff <- switch_5000_condeff$DASS_A +
+  theme_cowplot()
+ggsave("switch_condeff_anxiety.tiff", anxiety_switch_condeff)
+#stress condeff plot
+stress_switch_condeff <- switch_5000_condeff$DASS_S +
+  theme_cowplot()
+ggsave("switch_condeff_stress.tiff", stress_switch_condeff)
+#make table of group-level parameter estimates
+mod_200_5000_parameters <- broom::tidy(switch_trials_scaled_mod_5000)
+mod_200_5000_parameters <- mod_200_5000_parameters %>% mutate_at(2:5, round, 2) %>% 
+  slice(1:11)
+#export parameters as table
+write.csv(mod_200_5000_parameters, file = "mod_200_5000_parameters.csv", row.names = F)
