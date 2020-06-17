@@ -1,7 +1,10 @@
 ---
 title: "EFiT DAG models"
-output: html_notebook
-editor_options: 
+output:
+  pdf_document: default
+  word_document: default
+  html_notebook: default
+editor_options:
   chunk_output_type: inline
 ---
 ```{r load packages, echo=FALSE, warning=FALSE, message=FALSE}
@@ -10,104 +13,145 @@ library(ggdag, warn.conflicts=F, quietly=T)
 library(tidyverse,warn.conflicts=F, quietly=T)
 ```
 
-Example causal model containing all EFiT variables.
+#Examples
+```{r simple dag function}
+gg_simple_dag <- function(d) {
+  
+  d %>% 
+    ggplot(aes(x = x, y = y, xend = xend, yend = yend)) +
+    geom_dag_point(color = "steelblue", alpha = 1/2, size = 12) +
+    geom_dag_text(color = "black") +
+    geom_dag_edges() + 
+    theme_dag()
+  
+}
+```
+```{r fancy dag function}
 
+gg_fancy_dag <- function(d, x = 1, y = 1, circle = "U") {
+  
+  d %>% 
+    ggplot(aes(x = x, y = y, xend = xend, yend = yend)) +
+    geom_dag_point(aes(color = name == circle),
+                   alpha = 1/2, size = 12, show.legend = F) +
+    geom_point(x = x, y = y, 
+               size = 6.5, shape = 1, stroke = 1, color = "orange") +
+    geom_dag_text(color = "black") +
+    geom_dag_edges() + 
+    scale_color_manual(values = c("steelblue", "orange")) +
+    theme_dag()
+  
+}
+```
 ```{r example model}
 # Initialize the DAG. "y ~ x" means that x is a parent of y (y <- x)
 example_m1 <- dagify(
-            THI ~ Tp,
-            THI ~ EF,
-            C2 ~ C1,
-            Tp ~ C2,
-            EF ~ C3 + C4 + C5,
-            THI ~ C6 + C7,
-            EF ~ C8,
-            EF ~ C1,
-            THI ~ TD,
+            T_h ~ T_p,
+            T_h ~ Ef,
+            H_t ~ Age,
+            T_p ~ H_t,
+            Ef ~ Dep + Anx + Str,
+            T_h ~ Rum + C_f,
+            Ef ~ C_r,
+            Ef ~ Age,
+            T_h ~ T_d,
+            Ef ~ T_l,
              labels =
-               c("EF" = "Executive \n function",
-                 "THI" = "Reported \n tinnitus \n severity",
-                 "Tp" = "Perceiving \n tinnitus",
-                 "TD" = "Tinnitus \n Duration",
-                 "C1" = "Age",
-                 "C2" = "Hearing \n thresholds",
-                 "C3" = "Depression",
-                 "C4" = "Anxiety",
-                 "C5" = "Stress",
-                 "C6" = "Rumination",
-                 "C7" = "Cognitive \n failures",
-                 "C8" = "Cognitive \n reserve"), 
-              exposure = "Tp",
-              outcome = "THI") 
+               c("Ef" = "Executive \n function",
+                 "T_h" = "Reported \n tinnitus \n severity",
+                 "T_p" = "Perceiving \n tinnitus",
+                 "T_d" = "Tinnitus \n duration",
+                 "T_l" = "Tinnitus \n laterality",
+                 "Age" = "Age",
+                 "H_t" = "Hearing \n thresholds",
+                 "Dep" = "Depression",
+                 "Anx" = "Anxiety",
+                 "Str" = "Stress",
+                 "Rum" = "Rumination",
+                 "C_f" = "Cognitive \n failures",
+                 "C_r" = "Cognitive \n reserve"), 
+              exposure = "T_p",
+              outcome = "T_h") 
 
 
-# Plot the DAG
-example_m1 %>% ggplot(aes(x = x, y = y, xend = xend, yend = yend)) +
-  geom_dag_edges() +
-  geom_dag_point() +
-  geom_dag_text() +
-  scale_adjusted() +
-  geom_dag_label_repel(aes(label = label),
-                       nudge_y = -.1,
-                       nudge_x = .25,
-                       alpha = .85) +
-  theme_void()
+
+test <- example_m1 %>% gg_fancy_dag(x = 1, y = 1, circle = "Ef")
+
+ggsave("test_dag.tiff", test)
 ```
 
-Group association model
+```{r implied conditional independencies, echo=TRUE}
+impliedConditionalIndependencies(example_m1)
+```
+
+#Group association model
 ```{r simple assocation model}
-group_m1 <- dagify(
-  EF ~~ THI,
-  labels =
-    c("EF" = "Executive \n function",
-      "THI" = "Reported \n tinnitus \n severity",
-      "Tp" = "Perceiving \n tinnitus"),
-  exposure = "THI",
-  outcome = "EF"
-)
+group_m1 <- dagify(Ef ~~ T_h)
 
-# Plot the DAG
-group_m1 %>% ggplot(aes(x = x, y = y, xend = xend, yend = yend)) +
-  geom_dag_edges(curvature = 0) +
-  geom_dag_point() +
-  geom_dag_text() +
-  scale_adjusted() +
-  geom_dag_label_repel(aes(label = label),
-                       nudge_y = -.1,
-                       nudge_x = .25,
-                       alpha = .85) +
-  theme_void()
+group_m1 %>%  ggplot(aes(x = x, y = y, xend = xend, yend = yend)) +
+    geom_dag_point(color = "steelblue", alpha = 1/2, size = 12) +
+    geom_dag_text(color = "black") +
+    geom_dag_edges(curvature = 0) + 
+    theme_dag()
 ```
 
-Group association model with typical confounders
+#Group association model with typical confounders
 ```{r association model with confounders}
 # Initialize the DAG. "y ~ x" means that x is a parent of y (y <- x)
 group_m2 <- dagify(
-  THI ~~ EF, 
-  THI ~~ C1 + C2 + C3 + C4 + C5,
-  labels =
-    c("EF" = "Executive \n function",
-                 "THI" = "Reported \n tinnitus \n severity",
-                 "Tp" = "Perceiving \n tinnitus",
-                 "TD" = "Tinnitus \n Duration",
-                 "C1" = "Age",
-                 "C2" = "Hearing \n thresholds",
-                 "C3" = "Depression",
-                 "C4" = "Anxiety",
-                 "C5" = "Stress")
-) 
-
+  T_h ~~ Ef, 
+  T_h ~~ Age + H_t + Dep + Anx + Str
+  ) 
 
 # Plot the DAG
 group_m2 %>% ggplot(aes(x = x, y = y, xend = xend, yend = yend)) +
-  geom_dag_edges(curvature = 0) +
-  geom_dag_point() +
-  geom_dag_text() +
-  scale_adjusted() +
-  geom_dag_label_repel(aes(label = label),
-                       nudge_y = -.1,
-                       nudge_x = .25,
-                       alpha = .85) +
-  theme_void()
+    geom_dag_point(color = "steelblue", alpha = 1/2, size = 12) +
+    geom_dag_text(color = "black") +
+    geom_dag_edges(curvature = 0) + 
+    theme_dag()
 ```
 
+
+
+
+#Overlap models
+```{r Ef as outcome models}
+# define our coordinates
+dag_coords <-
+  tibble(name = c("Dis", "Gen", "T_h", 
+                  "T_l", "H_t", "Age", "Ef"),
+         x    = c(2, 1.5, 1,
+                  1, 2, 2, 2.5),
+         y    = c(2.5, 2.5, 2, 
+                  1, 1, 1.5, 1.5))
+#dag
+overlap_1 <- dagify(
+  Dis ~ Gen,
+  T_h ~ Gen,
+  T_h ~ T_l,
+  Ef ~ Dis + Age + H_t + T_l + T_h,
+  coords = dag_coords,
+  exposure = "T_h",
+  outcome = "Ef"
+)
+
+
+
+test <- overlap_1 %>% gg_fancy_dag(x = 0, y = 0, circle = "Ef")
+
+ggsave("test_dag.tiff", test2)
+
+impliedConditionalIndependencies(overlap_1)
+
+test2 <- ggdag_adjustment_set(overlap_1)
+```
+This general model is testable between the Bothersome Tinnitus and  Tinnitus groups in both datasets with the however there are some general caveats and points of interest:
+
+Global psychological distress is measured by the DASS21 in EFiT and Core-OM in Najibahs. There does not appear to be any literature that directly compares the correlation between the two, so this is an assumption that the summation of both questionnaires gets at global psychological distress.
+
+The specific Ef outcomes to be tested in both groups:
+1. Fluid ability
+  a. Matrix reasoning (WAIS-II in EFiT)
+  b. Matrix reasoning (WASI in thesis)
+2. 
+  a. Digit span backwards/
