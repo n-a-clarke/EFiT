@@ -1095,6 +1095,27 @@ ggsave("SDMplot_tinnitusVS.tiff",plot = SDMplot_tinitusVS, units="in", width=5, 
 
 ```
 
+```{r self report effect sizes}
+CFQ_cd_control_mild <- cohens_d(controls$CFQ, mild_tin$CFQ)#controls vs mild
+
+CFQ_cd_control_mild_CI <- d.ci(CFQ_cd_control_mild, n1=groupCount$group_count[1], n2=groupCount$group_count[2])#confidence interval for CFQ
+round(CFQ_cd_control_mild_CI, digits = 3)
+
+CFQ_cd_control_modsev <- cohens_d(controls$CFQ, modsev_tin$CFQ)#controls vs mild
+CFQ_cd_control_modsev_CI <- d.ci(CFQ_cd_control_modsev, n1=groupCount$group_count[1], n2=groupCount$group_count[3])
+round(CFQ_cd_control_modsev_CI, digits = 3)
+
+RRS_cd_control_mild <- cohens_d(controls$RRS, mild_tin$RRS)#controls vs mild
+
+RRS_cd_control_mild_CI <- d.ci(RRS_cd_control_mild, n1=groupCount$group_count[1], n2=groupCount$group_count[2])#confidence interval for RRS
+round(RRS_cd_control_mild_CI, digits = 3)
+
+RRS_cd_control_modsev <- cohens_d(controls$RRS, modsev_tin$RRS)#controls vs mild
+RRS_cd_control_modsev_CI <- d.ci(RRS_cd_control_modsev, n1=groupCount$group_count[1], n2=groupCount$group_count[3])
+round(RRS_cd_control_modsev_CI, digits = 3)
+```
+
+
 ```{r convert cohens d to r for meta-analysis comparison}
 tasks_d_to_r <- data.frame(task = control_mild_control_modsev_cohensd_ci$task , r = convert_d_to_r(control_mild_control_modsev_cohensd_ci$cohens_d), group = control_mild_control_modsev_cohensd_ci$group)
 
@@ -2045,6 +2066,7 @@ RIF tinnitus and bothersome tinnitus coefficients and beta-probabilities
 `r knitr::kable(all_tin_RIF_table)`
 
 #BAYESIAN LINEAR MODELS
+
 ##Number-letter sequencing
 ```{r rstanarm nls THI groups lm}
 bayes_nls_lm_tincats <- stan_glm(formula = nls_correct ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S, data = efit, seed = 12345)#fit standard model
@@ -2444,15 +2466,19 @@ both_vec <- c(rep(all_bayes_ranked_lm_tincats_scaled[2,3], 7),
 
 bothersome_beta_ratio <- all_bayes_ranked_lm_tincats_scaled %>% 
       mutate(bothersome_vector = both_vec,
-        bother_beta_ratio = both_vec/estimate) %>% 
+        bother_greater_beta_ratio = both_vec/estimate,
+        bother_worse_beta_ratio = estimate/both_vec) %>% 
   select(task,IV,
-         bothersome_vector, estimate, bother_beta_ratio) %>% arrange(IV, desc(bother_beta_ratio)) %>% 
-  filter(IV != "bothersome_tinnitus",
-         bother_beta_ratio > 2 | bother_beta_ratio < -2)
+         bothersome_vector, 
+         estimate, 
+         bother_greater_beta_ratio,
+         bother_worse_beta_ratio) %>% 
+  arrange(IV, 
+          desc(bother_greater_beta_ratio),
+          desc(bother_worse_beta_ratio)) %>% 
+  filter(IV != "bothersome_tinnitus")#,
+         #bother_beta_ratio > 2 | bother_beta_ratio < -2)
 #filtered to beta ratios where the x2 difference between bothersome tinnitus
-
-
-
 ```
 #
 bothersome beta ratios
@@ -2508,15 +2534,140 @@ table of bayes bothersome tinnitus rank
 #
 table of bayes tinnitus rank
 `r knitr::kable(bayes_tinnitus_rank)`
-```{r causal model, eval= F}
-efit_causal <- efit %>%
-  filter(THI_cat != "none")
 
-m1 <- stan_glm(THI_cat ~ nls_correct+ switch_cost + stroop_incongruent +matrixReason + age + DASS_D + DASS_A + DASS_S,
-               family = "binomial",
-               data = efit_causal,
-               seed = 123)
+#SCM modelling
+```{r prepare data nm_thesis data}
+#load nm thesis data
+nm_data <- read_csv("nm_thesis.csv")
 
-plot(m1, "areas", prob = 0.95, prob_outer = 1)
+nm_data <- nm_data %>% mutate(
+    THI_cat = ifelse(
+      thi_total >= 38 ,"bothersome tinnitus", "tinnitus")) #add a categorical variable with the groups split by thi_total scores
+
+#count number of bothered and non-bothered
+nm_group_count <- nm_data %>% 
+  group_by(THI_cat) %>% 
+  summarise(total = n())
+#create scaled variables for lms
+nm_data <- nm_data %>% 
+  mutate(thi_total_scaled = scale(thi_total),
+         PTA_Better_scaled = scale(PTA_Better),
+         WASI_Raw_scaled = scale(WASI_Raw),
+         core_total_scaled = scale(core_total))
+
+```
+
+```{r prepare EFiT data}
+efit_scm <- efit %>% 
+  filter(THI_cat != "control")#remove control group
+
+efit_scm <- efit_scm %>% 
+  mutate(glo_psych = DASS_D + DASS_A + DASS_S)#great global psychological distress variable
+
+efit_scm <- efit_scm %>% 
+  mutate(nls_correct_scaled = scale(nls_correct),
+         RIF_Diff_scaled = scale(RIF_Diff),
+         keepTrack_scaled = scale(keepTrack),
+         stroop_incongruent_scaled = scale(stroop_incongruent),
+         stroop_errors_scaled = scale(stroop_errors),
+         switch_cost_scaled = scale(switch_cost),
+         rule_errors_scaled = scale(rule_errors),
+         dual_task_total_scaled = scale(dual_task_total),
+         matrixReason_scaled = scale(matrixReason),
+         age_scaled = scale(age),
+         hearThresh_scaled = scale(hearThresh),
+         DASS_A_scaled = scale(DASS_A),
+         DASS_D_scaled = scale(DASS_D),
+         DASS_S_scaled = scale(DASS_S),
+         CRIq_scaled = scale(CRIq),
+         RRS_scaled = scale(RRS),
+         glo_psych_scaled = scale(glo_psych),
+         THI_scaled = scale(THI)
+  )
+```
+
+```{r historgrams THI}
+nm_data %>% ggplot(aes(x =thi_total)) +
+  geom_histogram()
+
+efit_scm %>% ggplot(aes(x =THI)) +
+  geom_histogram()
+```
+
+
+```{r frequentist matrix reason causal models without duration}
+#EFiT unscaled model
+efit_scm_matrix_lm <- lm(THI ~ glo_psych + matrixReason + hearThresh, data = efit_scm)
+
+#tidy and round model
+tidy_efit_scm_matrix_lm <- tidy(efit_scm_matrix_lm) %>% 
+  mutate_if(is.numeric, round, 3)
+
+#EFiT scaled model
+efit_scm_matrix_lm_scaled <- lm(scale(THI) ~ scale(glo_psych) + scale(matrixReason) + scale(hearThresh), data = efit_scm)
+
+#tidy and round model
+tidy_efit_scm_matrix_lm_scaled <- tidy(efit_scm_matrix_lm_scaled) %>% 
+  mutate_if(is.numeric, round, 3)
+
+#nm_thesis unscaled model
+nm_scm_matrix_lm <- lm(thi_total ~ core_total + WASI_Raw + PTA_Better, data = nm_data)
+
+#tidy and round model
+tidy_nm_scm_matrix_lm <- tidy(nm_scm_matrix_lm) %>% 
+  mutate_if(is.numeric, round, 3)
+
+#nm_thesis scaled model
+nm_scm_matrix_lm_scaled <- lm(thi_total_scaled ~ core_total_scaled+ WASI_Raw_scaled + PTA_Better_scaled, data = nm_data)
+
+#tidy and round model
+tidy_nm_scm_matrix_lm_scaled <- tidy(nm_scm_matrix_lm_scaled) %>% 
+  mutate_if(is.numeric, round, 3)
+```
+
+```{r bayesian matrix reason causal models without duration}
+#EFiT unscaled model
+efit_scm_matrix_bayes_lm <- stan_glm(THI ~ glo_psych + matrixReason + hearThresh, data = efit_scm, seed = 12345)
+
+#tidy and round model
+tidy_efit_scm_matrix_bayes_lm <- tidy(efit_scm_matrix_bayes_lm) %>% 
+  mutate_if(is.numeric, round, 3)
+
+#EFiT scaled model
+efit_scm_matrix_bayes_lm_scaled <- stan_glm(THI_scaled ~ glo_psych_scaled + matrixReason_scaled + hearThresh_scaled, data = efit_scm)
+
+#tidy and round model
+tidy_efit_scm_matrix_bayes_lm_scaled <- tidy(efit_scm_matrix_bayes_lm_scaled) %>% 
+  mutate_if(is.numeric, round, 3)
+
+#nm_thesis unscaled model
+nm_scm_matrix_bayes_lm <- stan_glm(thi_total ~ core_total + WASI_Raw + PTA_Better, data = nm_data, seed = 12345)
+
+#tidy and round model
+tidy_nm_scm_matrix_bayes_lm <- tidy(nm_scm_matrix_bayes_lm) %>% 
+  mutate_if(is.numeric, round, 3)
+
+#nm_thesis scaled model
+nm_scm_matrix_bayes_lm_scaled <- stan_glm(thi_total_scaled ~ core_total_scaled+ WASI_Raw_scaled + PTA_Better_scaled, data = nm_data, seed = 12345)
+
+#tidy and round model
+tidy_nm_scm_matrix_bayes_lm_scaled <- tidy(nm_scm_matrix_bayes_lm_scaled) %>% 
+  mutate_if(is.numeric, round, 3)
+```
+
+```{r posterior samples for both models}
+#draws from efit matrix
+efit_scm_matrix_posterior_draws <- spread_draws(efit_scm_matrix_bayes_lm_scaled, matrixReason_scaled, seed = 123)
+#probability that coef is < 0
+efit_scm_matrix_partial_beta_prob <- mean(efit_scm_matrix_posterior_draws$matrixReason_scaled < 0) %>% round(digits = 2)
+#draws from nm matrix model
+nm_scm_matrix_posterior_draws <- spread_draws(nm_scm_matrix_bayes_lm_scaled, WASI_Raw_scaled, seed = 123)
+
+nm_scm_matrix_partial_beta_prob <- mean(nm_scm_matrix_posterior_draws$WASI_Raw_scaled < 0) %>% round(digits = 2)
+```
+
+##effect of duration - tinnitus duration added into m
+```{r prepare duration in each dataset and report removed missing}
+
 ```
 
