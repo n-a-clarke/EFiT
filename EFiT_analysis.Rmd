@@ -2675,6 +2675,10 @@ nm_scm_matrix_partial_beta_prob <- mean(nm_scm_matrix_posterior_draws$WASI_Raw_s
 #create dateset to reduce
 paf_nm_dat <- nm_data %>%  select(WASI_Raw, WCST_CatsCompleted, DSB_Raw)
 
+#sphericity
+parameters::check_sphericity(paf_nm_dat)
+KMO(paf_nm_dat)
+vss(x = paf_nm_dat)
 #single factor no roation
 nm_paf <- fa(pc_nm_dat, nfactors = 1, fm = "pa", rotate = 'oblimin', covar = FALSE)
 
@@ -2692,12 +2696,13 @@ nm_factor_score <- nm_factor_score$PA1
 #bind factor scores to 
 nm_data <- cbind(nm_factor_score, nm_data)
 
-nm_scm_paf <- lm(thi_total ~ nm_factor_score + PTA_Better + core_total, data = testing)
+nm_scm_fsr <- lm(thi_total ~ nm_factor_score + PTA_Better + core_total, data = testing)
 
-summary(nm_scm_paf)
+summary(nm_scm_fsr)
 ```
 
-```{r bayes scm nm factor regression}
+
+```{r bayes scm nm factor score regression}
 #nm_thesis unscaled model
 nm_scm_factor_bayes_lm <- stan_glm(thi_total ~ core_total + nm_factor_score + PTA_Better, data = nm_data, seed = 12345)
 
@@ -2723,11 +2728,24 @@ nm_scm_factor_partial_beta_prob <- mean(nm_scm_factor_posterior_draws$nm_factor_
 #create dateset to reduce
 paf_efit_dat <- efit_scm %>%  select(nls_correct, matrixReason, keepTrack)
 
+#sphericity
+parameters::check_sphericity(paf_efit_dat)
+KMO(paf_efit_dat)
+
 #single factor no roation
-efit_paf <- fa(paf_efit_dat, nfactors = 1, fm = "pa", rotate = 'oblimin', covar = FALSE)
+efit_paf <- fa(paf_efit_dat, nfactors = 1, fm = "pa", rotate = 'varimax', covar = FALSE)
+#stats
+fa.stats(f = efit_paf)
+
+rela::paf(paf_efit_dat)
+#single factor no roation
+efit_fa_ml <- fa(paf_efit_dat, nfactors = 1, fm = "ml", rotate = 'oblimin', covar = FALSE)
+
+fa.stats(f = efit_fa_ml)
 
 fa.diagram(efit_paf)
 
+fa.stats(f = efit_paf)
 #single factor 
 
 fa.parallel(paf_efit_dat, fa = "fa", fm = "pa")
@@ -2739,10 +2757,31 @@ efit_factor_scores <- as.data.frame(efit_factor_scores)
 
 efit_factor_scores <- efit_factor_scores$PA1
 
-testing2 <- cbind(efit_factor_scores, efit_scm)
+efit_scm <- cbind(efit_factor_scores, efit_scm)
 
-test_mod2 <- lm(THI ~ efit_factor_scores + hearThresh + glo_psych, data = testing2)
+efit_scm_fsr_lm <- lm(THI ~ efit_factor_scores + hearThresh + glo_psych, data = testing2)
 
-summary(test_mod2)
+summary(efit_scm_fsr_lm)
+```
+
+```{r bayes scm efit factor regression}
+#efit unscaled model
+efit_scm_factor_bayes_lm <- stan_glm(THI ~ glo_psych + efit_factor_scores + hearThresh, data = efit_scm, seed = 12345)
+
+#tidy and round model
+tidy_efit_scm_factor_bayes_lm <- tidy(efit_scm_factor_bayes_lm) %>% 
+  mutate_if(is.numeric, round, 3)
+
+#nm_thesis scaled model
+nm_scm_factor_bayes_lm_scaled <- stan_glm(thi_total_scaled ~ core_total_scaled+ scale(nm_factor_score) + PTA_Better_scaled, data = nm_data, seed = 12345)
+
+#tidy and round model
+tidy_nm_scm_factor_bayes_lm_scaled <- tidy(nm_scm_factor_bayes_lm_scaled) %>% 
+  mutate_if(is.numeric, round, 3)
+
+#draws from efit factor score model
+efit_scm_factor_posterior_draws <- spread_draws(efit_scm_factor_bayes_lm, efit_factor_scores, seed = 123)
+
+efit_scm_factor_partial_beta_prob <- mean(efit_scm_factor_posterior_draws$efit_factor_scores < 0) %>% round(digits = 2)
 ```
 
