@@ -2559,7 +2559,7 @@ nm_data <- nm_data %>%
 
 ```{r prepare EFiT data}
 efit_scm <- efit %>% 
-  filter(THI_cat != "control")#remove control group
+  filter(THI_cat == "tinnitus" | THI_cat == "bothersome tinnitus")#remove control group
 
 efit_scm <- efit_scm %>% 
   mutate(glo_psych = DASS_D + DASS_A + DASS_S)#great global psychological distress variable
@@ -2593,7 +2593,6 @@ nm_data %>% ggplot(aes(x =thi_total)) +
 efit_scm %>% ggplot(aes(x =THI)) +
   geom_histogram()
 ```
-
 
 ```{r frequentist matrix reason causal models without duration}
 #EFiT unscaled model
@@ -2666,12 +2665,7 @@ nm_scm_matrix_posterior_draws <- spread_draws(nm_scm_matrix_bayes_lm_scaled, WAS
 nm_scm_matrix_partial_beta_prob <- mean(nm_scm_matrix_posterior_draws$WASI_Raw_scaled < 0) %>% round(digits = 2)
 ```
 
-##effect of duration - tinnitus duration added into m
-```{r prepare duration in each dataset and report removed missing}
-
-```
-
-```{r nm_data principe axis factor analysis}
+```{r nm_data principal axis factor analysis}
 #create dateset to reduce
 paf_nm_dat <- nm_data %>%  select(WASI_Raw, WCST_CatsCompleted, DSB_Raw)
 
@@ -2680,7 +2674,7 @@ parameters::check_sphericity(paf_nm_dat)
 KMO(paf_nm_dat)
 vss(x = paf_nm_dat)
 #single factor no roation
-nm_paf <- fa(pc_nm_dat, nfactors = 1, fm = "pa", rotate = 'oblimin', covar = FALSE)
+nm_paf <- fa(paf_nm_dat, nfactors = 1, fm = "pa", rotate = 'none', covar = FALSE)
 
 fa.diagram(nm_paf)
 
@@ -2696,11 +2690,10 @@ nm_factor_score <- nm_factor_score$PA1
 #bind factor scores to 
 nm_data <- cbind(nm_factor_score, nm_data)
 
-nm_scm_fsr <- lm(thi_total ~ nm_factor_score + PTA_Better + core_total, data = testing)
+nm_scm_fsr <- lm(thi_total ~ nm_factor_score + PTA_Better + core_total, data = nm_data)
 
 summary(nm_scm_fsr)
 ```
-
 
 ```{r bayes scm nm factor score regression}
 #nm_thesis unscaled model
@@ -2723,8 +2716,7 @@ nm_scm_factor_posterior_draws <- spread_draws(nm_scm_factor_bayes_lm, nm_factor_
 nm_scm_factor_partial_beta_prob <- mean(nm_scm_factor_posterior_draws$nm_factor_score < 0) %>% round(digits = 2)
 ```
 
-
-```{r EFiT principle axis factor analysis}
+```{r EFiT principal axis factor analysis}
 #create dateset to reduce
 paf_efit_dat <- efit_scm %>%  select(nls_correct, matrixReason, keepTrack)
 
@@ -2733,15 +2725,12 @@ parameters::check_sphericity(paf_efit_dat)
 KMO(paf_efit_dat)
 
 #single factor no roation
-efit_paf <- fa(paf_efit_dat, nfactors = 1, fm = "pa", rotate = 'varimax', covar = FALSE)
+efit_paf <- fa(paf_efit_dat, nfactors = 1, fm = "pa", rotate = 'none', covar = FALSE)
 #stats
 fa.stats(f = efit_paf)
 
-rela::paf(paf_efit_dat)
 #single factor no roation
-efit_fa_ml <- fa(paf_efit_dat, nfactors = 1, fm = "ml", rotate = 'oblimin', covar = FALSE)
-
-fa.stats(f = efit_fa_ml)
+#efit_fa_ml <- fa(paf_efit_dat, nfactors = 1, fm = "ml", rotate = 'oblimin', covar = FALSE)
 
 fa.diagram(efit_paf)
 
@@ -2759,7 +2748,7 @@ efit_factor_scores <- efit_factor_scores$PA1
 
 efit_scm <- cbind(efit_factor_scores, efit_scm)
 
-efit_scm_fsr_lm <- lm(THI ~ efit_factor_scores + hearThresh + glo_psych, data = testing2)
+efit_scm_fsr_lm <- lm(THI ~ efit_factor_scores + hearThresh + glo_psych, data = efit_scm)
 
 summary(efit_scm_fsr_lm)
 ```
@@ -2770,6 +2759,13 @@ efit_scm_factor_bayes_lm <- stan_glm(THI ~ glo_psych + efit_factor_scores + hear
 
 #tidy and round model
 tidy_efit_scm_factor_bayes_lm <- tidy(efit_scm_factor_bayes_lm) %>% 
+  mutate_if(is.numeric, round, 3)
+
+#nm_thesis unscaled model
+nm_scm_factor_bayes_lm <- stan_glm(thi_total ~ core_total + nm_factor_score + PTA_Better, data = nm_data, seed = 12345)
+
+#tidy and round model
+tidy_nm_scm_factor_bayes_lm <- tidy(nm_scm_factor_bayes_lm) %>% 
   mutate_if(is.numeric, round, 3)
 
 #nm_thesis scaled model
@@ -2783,5 +2779,64 @@ tidy_nm_scm_factor_bayes_lm_scaled <- tidy(nm_scm_factor_bayes_lm_scaled) %>%
 efit_scm_factor_posterior_draws <- spread_draws(efit_scm_factor_bayes_lm, efit_factor_scores, seed = 123)
 
 efit_scm_factor_partial_beta_prob <- mean(efit_scm_factor_posterior_draws$efit_factor_scores < 0) %>% round(digits = 2)
+
+#draws from nm factor score model
+nm_scm_factor_posterior_draws <- spread_draws(nm_scm_factor_bayes_lm, nm_factor_score, seed = 123)
+
+nm_scm_factor_partial_beta_prob <- mean(nm_scm_factor_posterior_draws$nm_factor_score < 0) %>% round(digits = 2)
+
+
+```
+
+##effect of tinnitus duration 
+```{r prepare duration in each dataset and report removed missing}
+efit_scm$TinDur <- as.numeric(efit_scm$TinDur)
+#filter nas
+efit_scm_tindur <- efit_scm %>% 
+  filter(!is.na(TinDur))
+
+nm_data$tin_dur <- as.numeric(nm_data$tin_dur)
+#filter nas
+nm_scm_tindur <- nm_data %>% 
+  filter(!is.na(tin_dur))
+```
+
+```{r freq lm with tindur}
+#efit
+efit_scm_fsr_lm_dur <- lm(THI ~ efit_factor_scores + hearThresh + glo_psych + TinDur, data = efit_scm_tindur)
+
+summary(efit_scm_fsr_lm_dur)
+#nm
+nm_scm_fsr_lm_dur <- lm(thi_total ~ nm_factor_score + PTA_Better + core_total + tin_dur, data = nm_scm_tindur)
+
+summary(nm_scm_fsr_lm_dur)
+```
+
+```{r bayes lm with tindur}
+#efit unscaled model
+efit_scm_factor_bayes_lm_tindur <- stan_glm(THI ~ glo_psych + efit_factor_scores + TinDur + hearThresh, data = efit_scm_tindur, seed = 12345)
+
+#tidy and round model
+tidy_efit_scm_factor_bayes_lm_tindur <- tidy(efit_scm_factor_bayes_lm_tindur) %>% 
+  mutate_if(is.numeric, round, 3)
+
+#draws from efit factor score model with tindur
+efit_scm_factor_posterior_draws_dur <- spread_draws(efit_scm_factor_bayes_lm_tindur, efit_factor_scores, seed = 123)
+
+efit_scm_factor_partial_beta_prob_dur <- mean(efit_scm_factor_posterior_draws_dur$efit_factor_scores < 0) %>% round(digits = 2)
+
+#nm_thesis unscaled model
+nm_scm_factor_bayes_lm_dur <- stan_glm(thi_total ~ core_total + nm_factor_score + PTA_Better + tin_dur, data = nm_scm_tindur, seed = 12345)
+
+#tidy and round model
+tidy_nm_scm_factor_bayes_lm_dur <- tidy(nm_scm_factor_bayes_lm_dur) %>% 
+  mutate_if(is.numeric, round, 3)
+
+#draws from nm factor score model
+nm_scm_factor_posterior_draws_dur <- spread_draws(nm_scm_factor_bayes_lm_dur, nm_factor_score, seed = 123)
+
+nm_scm_factor_partial_beta_prob <- mean(nm_scm_factor_posterior_draws_dur$nm_factor_score < 0) %>% round(digits = 2)
+
+
 ```
 
