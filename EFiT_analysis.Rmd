@@ -2678,10 +2678,14 @@ nm_paf <- fa(paf_nm_dat, nfactors = 1, fm = "pa", rotate = 'none', covar = FALSE
 
 fa.diagram(nm_paf)
 
+psych::alpha(paf_nm_dat)
+
 #single factor 
 fa.parallel(paf_nm_dat, fa = "fa", fm = "pa")
 #Thurstone is regression scores, cite skrondal 2001, Bartless methods gives the same lm inference
 nm_fs <- factor.scores(paf_nm_dat, nm_paf, method = "Thurstone")
+
+nm_fs <- factor.scores(paf_nm_dat, nm_paf, method = "Bar")
 
 nm_factor_score <- nm_fs$scores %>% unlist()
 nm_factor_score <- as.data.frame(nm_factor_score)
@@ -2690,10 +2694,29 @@ nm_factor_score <- nm_factor_score$PA1
 #bind factor scores to 
 nm_data <- cbind(nm_factor_score, nm_data)
 
-nm_scm_fsr <- lm(thi_total ~ nm_factor_score + PTA_Better + core_total, data = nm_data)
 
-summary(nm_scm_fsr)
 ```
+
+```{r scm nm factor score regression}
+#scaled
+nm_scm_fsr_lm_scaled <- lm(scale(thi_total) ~ nm_factor_score + scale(PTA_Better) + scale(core_total), data = nm_data)
+
+tidy_nm_scm_fsr_lm_scaled <- tidy(nm_scm_fsr_lm_scaled) %>% 
+  mutate_if(is.numeric, round, 2) %>% 
+  mutate(dataset = 2)
+
+#unscaled THI
+nm_scm_fsr_lm <- lm(thi_total ~ nm_factor_score + scale(PTA_Better) + scale(core_total), data = nm_data)
+
+tidy_nm_scm_fsr_lm <- tidy(nm_scm_fsr_lm) %>% 
+  mutate_if(is.numeric, round, 2) %>% 
+  mutate(dataset = 2)
+
+nm_scm_fsr_frequentist <- rbind(tidy_nm_scm_fsr_lm_scaled,tidy_nm_scm_fsr_lm)
+
+```
+
+
 
 ```{r bayes scm nm factor score regression}
 #nm_thesis unscaled model
@@ -2701,20 +2724,28 @@ nm_scm_factor_bayes_lm <- stan_glm(thi_total ~ core_total + nm_factor_score + PT
 
 #tidy and round model
 tidy_nm_scm_factor_bayes_lm <- tidy(nm_scm_factor_bayes_lm) %>% 
-  mutate_if(is.numeric, round, 3)
+  mutate_if(is.numeric, round, 2)
 
 #nm_thesis scaled model
-nm_scm_factor_bayes_lm_scaled <- stan_glm(thi_total_scaled ~ core_total_scaled+ scale(nm_factor_score) + PTA_Better_scaled, data = nm_data, seed = 12345)
+nm_scm_factor_bayes_lm_scaled <- stan_glm(thi_total_scaled ~ core_total_scaled+ nm_factor_score + PTA_Better_scaled, data = nm_data, seed = 12345)
 
 #tidy and round model
 tidy_nm_scm_factor_bayes_lm_scaled <- tidy(nm_scm_factor_bayes_lm_scaled) %>% 
-  mutate_if(is.numeric, round, 3)
+  mutate_if(is.numeric, round, 2)
+
+
 
 #draws from nm factor score model
 nm_scm_factor_posterior_draws <- spread_draws(nm_scm_factor_bayes_lm, nm_factor_score, seed = 123)
 
 nm_scm_factor_partial_beta_prob <- mean(nm_scm_factor_posterior_draws$nm_factor_score < 0) %>% round(digits = 2)
+
+
+nm_scm_fsr_bayes <- rbind(tidy_nm_scm_factor_bayes_lm_scaled, tidy_nm_scm_factor_bayes_lm) %>% 
+  mutate(dataset = 2,
+         EF_less_than_0 = nm_scm_factor_partial_beta_prob)
 ```
+
 
 ```{r EFiT principal axis factor analysis}
 #create dateset to reduce
@@ -2725,7 +2756,7 @@ parameters::check_sphericity(paf_efit_dat)
 KMO(paf_efit_dat)
 
 #single factor no roation
-efit_paf <- fa(paf_efit_dat, nfactors = 1, fm = "pa", rotate = 'none', covar = FALSE)
+efit_paf <- fa(paf_efit_dat, nfactors = 1, fm = "pa", rotate = 'promax', covar = FALSE)
 #stats
 fa.stats(f = efit_paf)
 
@@ -2746,49 +2777,75 @@ efit_factor_scores <- as.data.frame(efit_factor_scores)
 
 efit_factor_scores <- efit_factor_scores$PA1
 
+psych::alpha(paf_efit_dat)
+
 efit_scm <- cbind(efit_factor_scores, efit_scm)
 
-efit_scm_fsr_lm <- lm(THI ~ efit_factor_scores + hearThresh + glo_psych, data = efit_scm)
-
-summary(efit_scm_fsr_lm)
 ```
+
+```{r frequentist efit scm fsr}
+#unscaled outcome
+efit_scm_fsr_lm <- lm(THI ~ efit_factor_scores + scale(hearThresh) + scale(glo_psych), data = efit_scm)
+
+tidy_efit_scm_fsr_lm <- tidy(efit_scm_fsr_lm) %>% 
+  mutate_if(is.numeric, round, 2)
+
+#unscaled 
+efit_scm_fsr_lm_scaled <- lm(scale(THI) ~ efit_factor_scores + scale(hearThresh) + scale(glo_psych), data = efit_scm)
+
+tidy_efit_scm_fsr_lm_scaled <- tidy(efit_scm_fsr_lm_scaled) %>% 
+  mutate_if(is.numeric, round, 2)
+
+efit_fsr_frequentist <- rbind(tidy_efit_scm_fsr_lm_scaled, tidy_efit_scm_fsr_lm) %>% 
+  mutate(dataset = 1)
+
+```
+
+
 
 ```{r bayes scm efit factor regression}
 #efit unscaled model
-efit_scm_factor_bayes_lm <- stan_glm(THI ~ glo_psych + efit_factor_scores + hearThresh, data = efit_scm, seed = 12345)
+efit_scm_factor_bayes_lm <- stan_glm(THI ~ scale(glo_psych) + efit_factor_scores + scale(hearThresh), data = efit_scm, seed = 12345)
 
 #tidy and round model
 tidy_efit_scm_factor_bayes_lm <- tidy(efit_scm_factor_bayes_lm) %>% 
-  mutate_if(is.numeric, round, 3)
+  mutate_if(is.numeric, round, 2)
 
-#nm_thesis unscaled model
-nm_scm_factor_bayes_lm <- stan_glm(thi_total ~ core_total + nm_factor_score + PTA_Better, data = nm_data, seed = 12345)
-
-#tidy and round model
-tidy_nm_scm_factor_bayes_lm <- tidy(nm_scm_factor_bayes_lm) %>% 
-  mutate_if(is.numeric, round, 3)
-
-#nm_thesis scaled model
-nm_scm_factor_bayes_lm_scaled <- stan_glm(thi_total_scaled ~ core_total_scaled+ scale(nm_factor_score) + PTA_Better_scaled, data = nm_data, seed = 12345)
+#efit unscaled model
+efit_scm_factor_bayes_lm_scaled <- stan_glm(scale(THI) ~ scale(glo_psych) + efit_factor_scores + scale(hearThresh), data = efit_scm, seed = 12345)
 
 #tidy and round model
-tidy_nm_scm_factor_bayes_lm_scaled <- tidy(nm_scm_factor_bayes_lm_scaled) %>% 
-  mutate_if(is.numeric, round, 3)
+tidy_efit_scm_factor_bayes_lm_scaled <- tidy(efit_scm_factor_bayes_lm_scaled) %>% 
+  mutate_if(is.numeric, round, 2)
+
+
 
 #draws from efit factor score model
 efit_scm_factor_posterior_draws <- spread_draws(efit_scm_factor_bayes_lm, efit_factor_scores, seed = 123)
 
 efit_scm_factor_partial_beta_prob <- mean(efit_scm_factor_posterior_draws$efit_factor_scores < 0) %>% round(digits = 2)
 
-#draws from nm factor score model
-nm_scm_factor_posterior_draws <- spread_draws(nm_scm_factor_bayes_lm, nm_factor_score, seed = 123)
-
-nm_scm_factor_partial_beta_prob <- mean(nm_scm_factor_posterior_draws$nm_factor_score < 0) %>% round(digits = 2)
-
+efit_scm_fsr_bayes <- rbind(tidy_efit_scm_factor_bayes_lm_scaled, tidy_efit_scm_factor_bayes_lm) %>% 
+  mutate(dataset = 1,
+         EF_less_than_0 = efit_scm_factor_partial_beta_prob)
 
 ```
 
-##effect of tinnitus duration 
+```{r frequentist and bayes tables without tindur}
+bayes_all_fsr_table <- rbind(efit_scm_fsr_bayes, nm_scm_fsr_bayes)
+
+frequentist_all_fsr_table <- rbind(efit_fsr_frequentist, nm_scm_fsr_frequentist)
+```
+
+#frequentist without tinnitus duration
+
+`r knitr::kable(frequentist_all_fsr_table, digits = 2)`
+
+#Bayes without tinnitus duration
+
+`r knitr::kable(bayes_all_fsr_table, digits = 2)`
+
+##EFFECT OF TINNITUS DURATION 
 ```{r prepare duration in each dataset and report removed missing}
 efit_scm$TinDur <- as.numeric(efit_scm$TinDur)
 #filter nas
@@ -2808,6 +2865,8 @@ efit_scm_fsr_lm_dur <- lm(THI ~ efit_factor_scores + hearThresh + glo_psych + Ti
 summary(efit_scm_fsr_lm_dur)
 #nm
 nm_scm_fsr_lm_dur <- lm(thi_total ~ nm_factor_score + PTA_Better + core_total + tin_dur, data = nm_scm_tindur)
+
+lm(thi_total ~ tin_dur, data = nm_scm_tindur)
 
 summary(nm_scm_fsr_lm_dur)
 ```
@@ -2837,6 +2896,31 @@ nm_scm_factor_posterior_draws_dur <- spread_draws(nm_scm_factor_bayes_lm_dur, nm
 
 nm_scm_factor_partial_beta_prob <- mean(nm_scm_factor_posterior_draws_dur$nm_factor_score < 0) %>% round(digits = 2)
 
+
+```
+
+```{r prop}
+ef_lat_sim <- rnorm(1000000, 0, .8)
+
+hist(ef_lat_sim)
+
+poor_ef_sim <- ef_lat_sim[ef_lat_sim < -1]
+
+total_ef <- length(ef_lat_sim)
+
+poor_total <- length(poor_ef_sim)
+
+(poor_total/total_ef) * 100
+###
+comp_lat_sim <- rnorm(1000000, 0, 1)
+
+poor_comp_sim <- comp_lat_sim[ef_lat_sim < -1]
+
+total_comp <- length(comp_lat_sim)
+
+poor_comp_total <- length(poor_comp_sim)
+
+(poor_comp_total/total_comp) * 100
 
 ```
 
