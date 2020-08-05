@@ -172,7 +172,7 @@ group_descriptive_table$`bothersome tinnitus` <- round(group_descriptive_table$`
 
 ```
 table group descriptives
-`r knitr::kable(group_descriptive_table)`
+`r knitr::kable(group_descriptive_table, digits = 1)`
 #
 ```{r cog measures mean and SD table}
 cog_descriptives <- efit %>% 
@@ -238,15 +238,29 @@ cog_descriptives$`bothersome tinnitus` <- as.numeric(cog_descriptives$`bothersom
 cog_descriptives$`bothersome tinnitus` <- round(cog_descriptives$`bothersome tinnitus`,2)
 ```
 table cog descriptives 
-`r knitr::kable(cog_descriptives)`
+`r knitr::kable(cog_descriptives, digits = 1)`
+
+```{r new datafram for figure labels}
+#new dataframe to change labels
+efit2 <- efit %>% 
+  mutate(
+    THI_cat = ifelse(
+      THI >= 38 ,"Distressing Tinnitus", ifelse(
+        THI > 0 & THI <= 37, "Non-Distressing Tinnitus", "No Tinnitus"
+      ))) #add a categorical variable with the groups split by THI scores
+```
+
 
 ##Histograms
 ```{r historgram age,eval= F}
-age_histo <- efit %>% ggplot(aes(x = age)) +
+efit2$THI_cat <- as.factor(efit2$THI_cat) %>% ordered(levels = c("No Tinnitus", "Non-Distressing Tinnitus", "Distressing Tinnitus"))#factorise tinnitus groups
+
+age_histo <- efit2 %>% ggplot(aes(x = age)) +
   geom_histogram(bins = 35) +
   facet_grid(. ~ THI_cat) +
+  labs(x = "age (years)") +
   theme_cowplot() +
-  theme(strip.text.x = element_text(size=10))
+  theme(strip.text.x = element_text(size=8))
 
 ggsave("age_histograms.tiff",plot = age_histo, units="in", width=5, height=4, dpi=400, compression = 'lzw')
 ```
@@ -259,64 +273,63 @@ efit %>% ggplot(aes(x = hearThresh)) +
 ```
 ##DASS stacked bar charts
 ```{r depression stacked bar chart, eval = F}
-DASS_D_stacked <- ggplot(data=efit, 
+#newdata frame with changed labels
+#multiply DASS subscale scores by 2 and create DASS total variable
+DASS_D_stacked <- ggplot(data=efit2, 
        aes(x = THI_cat, fill = fct_rev(DASS_D_cat))) +
   geom_bar(position = "fill") +
   scale_y_continuous(breaks = c(0,.1,.2,.3,.4,.5,.6,.7,.8,.9,1)) +
   xlab("group") +
   ylab("proportion") +
-  labs(fill = "DASS Category") +
-  ggtitle("Proportion of Depression Scores by Group") +
+  labs(fill = "DASS_D Category") +
   theme_cowplot() +
   theme(plot.title = element_text(size = 14),
         legend.text=element_text(size=10),
         legend.title =element_text(size=11, face = "bold"),
         panel.grid.major.y = element_line(colour = "light gray", linetype = "dashed"), 
-        axis.text.x.bottom = element_text(size = 8))
+        axis.text.x.bottom = element_text(size = 6))
 
 ggsave("DASS_D_stacked_prop.tiff",plot = DASS_D_stacked, units="in", width=5, height=4, dpi=400, compression = 'lzw')
 ```
 
 ```{r stress stacked bar chart, eval = F}
-DASS_S_stacked <- ggplot(data=efit, 
+DASS_S_stacked <- ggplot(data=efit2, 
        aes(x = THI_cat, fill = fct_rev(DASS_S_cat))) +
   geom_bar(position = "fill") +
   scale_y_continuous(breaks = c(0,.1,.2,.3,.4,.5,.6,.7,.8,.9,1)) +
   xlab("group") +
   ylab("proportion") +
-  labs(fill = "DASS Category") +
-  ggtitle("Proportion of Stress Scores by Group") +
+  labs(fill = "DASS_S Category") +
   theme_cowplot() +
   theme(plot.title = element_text(size = 14),
         legend.text=element_text(size=10),
         legend.title =element_text(size=11, face = "bold"),
         panel.grid.major.y = element_line(colour = "light gray", linetype = "dashed"), 
-        axis.text.x.bottom = element_text(size = 8))
+        axis.text.x.bottom = element_text(size = 6))
 
 ggsave("DASS_S_stacked_prop.tiff",plot = DASS_S_stacked, units="in", width=5, height=4, dpi=400, compression = 'lzw')
 ```
 
 ```{r anxiety stacked bar chart, eval = F}
-DASS_A_stacked <- ggplot(data=efit, 
+DASS_A_stacked <- ggplot(data=efit2, 
        aes(x = THI_cat, fill = fct_rev(DASS_A_cat))) +
   geom_bar(position = "fill") +
   scale_y_continuous(breaks = c(0,.1,.2,.3,.4,.5,.6,.7,.8,.9,1)) +
   xlab("group") +
   ylab("proportion") +
-  labs(fill = "DASS Category") +
-  ggtitle("Proportion of Anxiety Scores by Group") +
+  labs(fill = "DASS_A Category") +
   theme_cowplot() +
   theme(plot.title = element_text(size = 14),
         legend.text=element_text(size=10),
         legend.title =element_text(size=11, face = "bold"),
         panel.grid.major.y = element_line(colour = "light gray", linetype = "dashed"), 
-        axis.text.x.bottom = element_text(size = 8))
+        axis.text.x.bottom = element_text(size = 6))
 
 ggsave("DASS_A_stacked_prop.tiff",plot = DASS_A_stacked, units="in", width=5, height=4, dpi=400, compression = 'lzw')
 ```
 
 ```{r create variable for DASS subscale scores}
-mod_DASS <- efit %>% 
+mod_DASS <- efit2 %>% 
   mutate(mod_DASS = ifelse(DASS_D > 13 |
                              DASS_A > 9 |
                              DASS_S > 18, "moderate or higher", "normal or mild"))
@@ -331,14 +344,13 @@ mod_DASS_plot <- ggplot(data=mod_DASS,
   scale_y_continuous(breaks = c(0,.1,.2,.3,.4,.5,.6,.7,.8,.9,1)) +
   xlab("group") +
   ylab("proportion") +
-  labs(fill = "DASS Category") +
-  ggtitle("Proportion of Moderate or Higher \nDepression, Anxiety, or Stress by Group") +
+  labs(fill = "DASS_Mod Category") +
   theme_cowplot() +
   theme(plot.title = element_text(size = 12),
         legend.text=element_text(size=10),
         legend.title =element_text(size=11, face = "bold"),
         panel.grid.major.y = element_line(colour = "light gray", linetype = "dashed"), 
-        axis.text.x.bottom = element_text(size = 8)) +
+        axis.text.x.bottom = element_text(size = 5.5)) +
   scale_fill_viridis_d()
 
 ggsave("mod_DASS_stacked_prop.tiff",plot = mod_DASS_plot, units="in", width=5, height=4, dpi=400, compression = 'lzw')
@@ -354,6 +366,15 @@ mild_tin <- efit %>%
 modsev_tin <- efit %>% 
   filter(THI_cat == "bothersome tinnitus")
 ```
+#None-significant group differences demostration
+```{r age group difference non-sig}
+#control vs mild
+t.test(controls$nls_correct, mild_tin$nls_correct, alternative = "two.sided",var.equal = F)
+#control vs severe
+t.test(controls$age, modsev_tin$age, alternative = "two.sided",var.equal = F)
+```
+
+
 ##Controls and Mild
 ###Number-letter sequencing
 ```{r t-test control-mild letter-number sequencing}
@@ -900,7 +921,7 @@ control_mild_cd <- data.frame(
     switchCostRT_cd_control_mild_CI[3],
     switchErr_cd_control_mild_CI[3], 
     dual_cd_control_mildCI[3]),
-  c(rep("control vs tinnitus", 9))
+  c(rep("No Tinnitus vs Non-Distressing Tinnitus", 9))
 )
 colnames(control_mild_cd) <- c("task", "cohens_d", "CI_lower","CI_upper", "group")
 ```
@@ -944,7 +965,7 @@ control_modsev_cd <- data.frame(
     switchCostRT_cd_control_modsev_CI[3],
     switchErr_cd_control_modsev_CI[3], 
     dual_cd_control_modsevCI[3]),
-  c(rep("control vs bothersome tinnitus", 9))
+  c(rep("No Tinnitus vs Distressing Tinnitus", 9))
   )
 colnames(control_modsev_cd) <- c("task", "cohens_d", "CI_lower","CI_upper", "group")
 ```
@@ -988,7 +1009,7 @@ mild_modsev_cd <- data.frame(
     switchCostRT_cd_mild_modsev_CI[3],
     switchErr_cd_mild_modsev_CI[3], 
     dual_cd_mild_modsevCI[3]),
-  c(rep("tinnitus vs bothersome tinnitus", 9))
+  c(rep("Non-Distressing Tinnitus vs Distressing Tinnitus", 9))
   )
 colnames(mild_modsev_cd) <- c("task", "cohens_d", "CI_lower","CI_upper", "group")
 ```
@@ -1005,7 +1026,7 @@ all groups cohen's d
 
 ```{r filtered table for control-mild and control-moderate cohens d plot}
 control_mild_control_modsev_cohensd_ci <- all_groups_cohens_ci %>% 
-  filter(group != "tinnitus vs bothersome tinnitus")#filter all group cohens d table for control-mild and control-modsev
+  filter(group != "Non-Distressing Tinnitus vs Distressing Tinnitus")#filter all group cohens d table for control-mild and control-modsev
 
 control_mild_control_modsev_cohensd_ci <- control_mild_control_modsev_cohensd_ci %>% arrange(task,cohens_d)#arrange for easier transform
 
@@ -1037,10 +1058,9 @@ ggplot(aes(x = fct_rev(task), y = cohens_d, colour = group)) +
         legend.position="bottom",
         axis.title = element_text(size = 10),
         legend.justification = "centre")+
-  xlab("Task") +
-  ylab("Standardised Mean Difference") +
-  labs(colour = "Comparison \nGroups") +
-  ggtitle("Tinnitus and Bothersome Tinnitus Groups \nTask Performance Compared to \nControl Group")
+  xlab("task") +
+  ylab("standardised mean difference") +
+  labs(colour = "Comparison \nGroups")
 
 ggsave("SDMplot_controlVS.tiff",plot = SDMplot_controlVS, units="in", width=5, height=4, dpi=400, compression = 'lzw')
 
@@ -1048,7 +1068,7 @@ ggsave("SDMplot_controlVS.tiff",plot = SDMplot_controlVS, units="in", width=5, h
 
 ```{r filtered table for control-mild and mild-moderate cohens d plot}
 mild_control_mild_modsev_cohensd_ci <- all_groups_cohens_ci %>% 
-  filter(group != "control vs bothersome tinnitus")#filter all group cohens d table for control-mild and mild-modsev
+  filter(group != "No Tinnitus vs Distressing Tinnitus")#filter all group cohens d table for control-mild and mild-modsev
 
 mild_control_mild_modsev_cohensd_ci[1:9,2:4] <- mild_control_mild_modsev_cohensd_ci[1:9,2:4]*-1 #reverse sign of all effect sizes for control vs tinnitus, so it now represents tinnitus vs control
 
@@ -1079,17 +1099,17 @@ SDMplot_tinitusVS <- mild_control_mild_modsev_cohensd_ci %>% ggplot(aes(x = fct_
   scale_y_continuous(breaks = c(-1.2,-1,-.8,-.6,-.4,-.2,0,.2,.4,.6,.8,1)) +
   scale_color_viridis(discrete = TRUE, option = "D") +
   theme(legend.title = element_blank(),
-        legend.text=element_text(size=8),
+        legend.text=element_text(size=6),
         axis.text.x = element_text(size = 8),
         axis.text.y = element_text(size = 8),
         plot.title = element_text(size = 10),
         legend.position="bottom",
         axis.title = element_text(size = 10),
         legend.justification = "centre")+
-  xlab("Task") +
-  ylab("Standardised Mean Difference") +
-  labs(colour = "Comparison \nGroups") +
-  ggtitle("Control and Bothersome Tinnitus Groups \nTask Performance Compared to \nTinnitus Group")
+  xlab("task") +
+  ylab("standardised mean difference") +
+  labs(colour = "Comparison \nGroups")
+
 
 ggsave("SDMplot_tinnitusVS.tiff",plot = SDMplot_tinitusVS, units="in", width=5, height=4, dpi=400, compression = 'lzw')
 
@@ -1546,6 +1566,16 @@ ranked_nls_lm_tincats_scaled <- tidy_nls_lm_tincats_scaled %>%
          task = "nls_correct")
 ```
 
+```{rqq plot nlm}
+nls_stdres <- rstandard(nls_lm_tincats)
+
+qqnorm(nls_stdres, 
+ ylab="Standardized Residuals", 
+ xlab="Normal Scores", 
+ main="nls") 
+ qqline(nls_stdres)
+```
+
 ##Keep track
 ```{r keeptrack THI groups lm}
 keepTrack_lm_tincats <- lm(formula = keepTrack ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S, data = efit)
@@ -1561,7 +1591,19 @@ ranked_keepTrack_lm_tincats_scaled <- tidy_keepTrack_lm_tincats_scaled %>%
   mutate(partial_beta_rank = rank(estimate),
          task = "keep_track_correct")
 ```
-##Stroop
+
+```{rqq plot keeptrack}
+keepTrack_stdres <- rstandard(keepTrack_lm_tincats)
+
+qqnorm(keepTrack_stdres, 
+ ylab="Standardized Residuals", 
+ xlab="Normal Scores", 
+ main="keep track") 
+ qqline(keepTrack_stdres)
+
+```
+ 
+ ##Stroop
 ###RT
 ```{r stroop incong_rt THI groups lm}
 stroopRT_lm_tincats <- lm(formula = stroop_incongruent ~ THI_cat + age + hearThresh + DASS_A + DASS_D + DASS_S, data = efit)
@@ -2594,7 +2636,7 @@ efit_scm %>% ggplot(aes(x =THI)) +
   geom_histogram()
 ```
 
-```{r frequentist matrix reason causal models without duration}
+```{r frequentist matrix reason causal models without duration, eval = FALSE}
 #EFiT unscaled model
 efit_scm_matrix_lm <- lm(THI ~ glo_psych + matrixReason + hearThresh, data = efit_scm)
 
@@ -2624,7 +2666,7 @@ tidy_nm_scm_matrix_lm_scaled <- tidy(nm_scm_matrix_lm_scaled) %>%
   mutate_if(is.numeric, round, 3)
 ```
 
-```{r bayesian matrix reason causal models without duration}
+```{r bayesian matrix reason causal models without duration, eval = FALSE}
 #EFiT unscaled model
 efit_scm_matrix_bayes_lm <- stan_glm(THI ~ glo_psych + matrixReason + hearThresh, data = efit_scm, seed = 12345)
 
@@ -2654,7 +2696,7 @@ tidy_nm_scm_matrix_bayes_lm_scaled <- tidy(nm_scm_matrix_bayes_lm_scaled) %>%
   mutate_if(is.numeric, round, 3)
 ```
 
-```{r posterior samples for both models}
+```{r posterior samples for both models, eval = FALSE}
 #draws from efit matrix
 efit_scm_matrix_posterior_draws <- spread_draws(efit_scm_matrix_bayes_lm_scaled, matrixReason_scaled, seed = 123)
 #probability that coef is < 0
@@ -2716,8 +2758,6 @@ nm_scm_fsr_frequentist <- rbind(tidy_nm_scm_fsr_lm_scaled,tidy_nm_scm_fsr_lm)
 
 ```
 
-
-
 ```{r bayes scm nm factor score regression}
 #nm_thesis unscaled model
 nm_scm_factor_bayes_lm <- stan_glm(thi_total ~ core_total + nm_factor_score + PTA_Better, data = nm_data, seed = 12345)
@@ -2746,19 +2786,18 @@ nm_scm_fsr_bayes <- rbind(tidy_nm_scm_factor_bayes_lm_scaled, tidy_nm_scm_factor
          EF_less_than_0 = nm_scm_factor_partial_beta_prob)
 ```
 
-
 ```{r EFiT principal axis factor analysis}
 #create dateset to reduce
-paf_efit_dat <- efit_scm %>%  select(nls_correct, matrixReason, keepTrack)
+paf_efit_dat <- efit_scm %>% select(nls_correct, matrixReason, keepTrack)
 
 #sphericity
 parameters::check_sphericity(paf_efit_dat)
 KMO(paf_efit_dat)
 
 #single factor no roation
-efit_paf <- fa(paf_efit_dat, nfactors = 1, fm = "pa", rotate = 'promax', covar = FALSE)
+efit_paf <- fa(paf_efit_dat, nfactors = 1, fm = "pa", rotate = 'none', covar = FALSE)
 #stats
-fa.stats(f = efit_paf)
+#fa.stats(f = efit_paf)
 
 #single factor no roation
 #efit_fa_ml <- fa(paf_efit_dat, nfactors = 1, fm = "ml", rotate = 'oblimin', covar = FALSE)
@@ -2768,7 +2807,7 @@ fa.diagram(efit_paf)
 fa.stats(f = efit_paf)
 #single factor 
 
-fa.parallel(paf_efit_dat, fa = "fa", fm = "pa")
+#fa.parallel(paf_efit_dat, fa = "fa", fm = "pa")
 #Thurstone is regression scores, cite skrondal 2001, Bartless methods gives the same lm inference
 efit_fs <- factor.scores(paf_efit_dat, efit_paf, method = "Thurstone")
 
@@ -2777,7 +2816,7 @@ efit_factor_scores <- as.data.frame(efit_factor_scores)
 
 efit_factor_scores <- efit_factor_scores$PA1
 
-psych::alpha(paf_efit_dat)
+#psych::alpha(paf_efit_dat)
 
 efit_scm <- cbind(efit_factor_scores, efit_scm)
 
@@ -2800,8 +2839,6 @@ efit_fsr_frequentist <- rbind(tidy_efit_scm_fsr_lm_scaled, tidy_efit_scm_fsr_lm)
   mutate(dataset = 1)
 
 ```
-
-
 
 ```{r bayes scm efit factor regression}
 #efit unscaled model
@@ -2847,56 +2884,133 @@ frequentist_all_fsr_table <- rbind(efit_fsr_frequentist, nm_scm_fsr_frequentist)
 
 ##EFFECT OF TINNITUS DURATION 
 ```{r prepare duration in each dataset and report removed missing}
+#prepare efit dataset by binding factor scores and removing na for tinnitus duration
+efit_scm <- cbind(efit_scm, efit_factor_scores)
 efit_scm$TinDur <- as.numeric(efit_scm$TinDur)
 #filter nas
 efit_scm_tindur <- efit_scm %>% 
   filter(!is.na(TinDur))
-
+#prepare efit dataset by binding factor scores and removing na for tinnitus duration
+nm_data <- cbind(nm_data, nm_factor_score)
 nm_data$tin_dur <- as.numeric(nm_data$tin_dur)
 #filter nas
 nm_scm_tindur <- nm_data %>% 
   filter(!is.na(tin_dur))
 ```
 
-```{r freq lm with tindur}
-#efit
-efit_scm_fsr_lm_dur <- lm(THI ~ efit_factor_scores + hearThresh + glo_psych + TinDur, data = efit_scm_tindur)
+```{r efit freq lm with tindur}
+##unscaled outcome
+efit_scm_fsr_lm_dur <- lm(THI ~ efit_factor_scores + scale(hearThresh) + scale(glo_psych) + scale(TinDur), data = efit_scm_tindur)
 
-summary(efit_scm_fsr_lm_dur)
-#nm
-nm_scm_fsr_lm_dur <- lm(thi_total ~ nm_factor_score + PTA_Better + core_total + tin_dur, data = nm_scm_tindur)
+tidy_efit_scm_fsr_lm_dur <- tidy(efit_scm_fsr_lm_dur) %>% 
+  mutate_if(is.numeric, round, 2)
 
-lm(thi_total ~ tin_dur, data = nm_scm_tindur)
+#scaled outcome
+efit_scm_fsr_lm_dur_scaled <- lm(scale(THI) ~ efit_factor_scores + scale(hearThresh) + scale(glo_psych) + scale(TinDur), data = efit_scm_tindur)
 
-summary(nm_scm_fsr_lm_dur)
+tidy_efit_scm_fsr_lm_dur_scaled <- tidy(efit_scm_fsr_lm_dur_scaled) %>% 
+  mutate_if(is.numeric, round, 2)
+
+efit_fsr_frequentist_dur <- rbind(tidy_efit_scm_fsr_lm_dur_scaled, tidy_efit_scm_fsr_lm_dur) %>% 
+  mutate(dataset = 1)
+
 ```
 
-```{r bayes lm with tindur}
-#efit unscaled model
-efit_scm_factor_bayes_lm_tindur <- stan_glm(THI ~ glo_psych + efit_factor_scores + TinDur + hearThresh, data = efit_scm_tindur, seed = 12345)
+```{r nm freq fsr with tindur}
+#unscaled outcome
+nm_scm_fsr_lm_dur <- lm(thi_total ~ nm_factor_score + scale(PTA_Better) + scale(core_total) + scale(tin_dur), data = nm_scm_tindur)
+
+tidy_nm_scm_fsr_lm_dur <- tidy(nm_scm_fsr_lm_dur) %>% 
+  mutate_if(is.numeric, round, 2)
+
+#scaled outcome
+nm_scm_fsr_lm_dur_scaled <- lm(scale(thi_total) ~ nm_factor_score + scale(PTA_Better) + scale(core_total) + scale(tin_dur), data = nm_scm_tindur)
+
+tidy_nm_scm_fsr_lm_dur_scaled <- tidy(nm_scm_fsr_lm_dur_scaled) %>% 
+  mutate_if(is.numeric, round, 2)
+
+nm_fsr_frequentist_dur <- rbind(tidy_nm_scm_fsr_lm_dur_scaled, tidy_nm_scm_fsr_lm_dur) %>% 
+  mutate(dataset = 2)
+```
+
+
+```{r efit bayes lm with tindur}
+#efit unscaled output
+efit_scm_factor_bayes_lm_tindur <- stan_glm(THI ~ scale(glo_psych) + efit_factor_scores + scale(TinDur) + hearThresh, data = efit_scm_tindur, seed = 12345)
 
 #tidy and round model
 tidy_efit_scm_factor_bayes_lm_tindur <- tidy(efit_scm_factor_bayes_lm_tindur) %>% 
-  mutate_if(is.numeric, round, 3)
+  mutate_if(is.numeric, round, 2)
+
+#efit unscaled output
+efit_scm_factor_bayes_lm_tindur_scaled <- stan_glm(scale(THI) ~ scale(glo_psych) + efit_factor_scores + scale(TinDur) + hearThresh, data = efit_scm_tindur, seed = 12345)
+
+#tidy and round model
+tidy_efit_scm_factor_bayes_lm_tindur_scaled <- tidy(efit_scm_factor_bayes_lm_tindur_scaled) %>% 
+  mutate_if(is.numeric, round, 2)
 
 #draws from efit factor score model with tindur
 efit_scm_factor_posterior_draws_dur <- spread_draws(efit_scm_factor_bayes_lm_tindur, efit_factor_scores, seed = 123)
 
 efit_scm_factor_partial_beta_prob_dur <- mean(efit_scm_factor_posterior_draws_dur$efit_factor_scores < 0) %>% round(digits = 2)
 
-#nm_thesis unscaled model
-nm_scm_factor_bayes_lm_dur <- stan_glm(thi_total ~ core_total + nm_factor_score + PTA_Better + tin_dur, data = nm_scm_tindur, seed = 12345)
+efit_fsr_bayes_dur <- rbind(tidy_efit_scm_factor_bayes_lm_tindur_scaled, tidy_efit_scm_factor_bayes_lm_tindur) %>% 
+  mutate(dataset = 1,
+          EF_less_than_0 = efit_scm_factor_partial_beta_prob_dur)
+
+```
+
+```{r nm bayes lm with tindur}
+#unscaled outcome
+nm_scm_factor_bayes_lm_dur <- stan_glm(thi_total ~ scale(core_total) + nm_factor_score + scale(PTA_Better) + scale(tin_dur), data = nm_scm_tindur, seed = 12345)
 
 #tidy and round model
 tidy_nm_scm_factor_bayes_lm_dur <- tidy(nm_scm_factor_bayes_lm_dur) %>% 
-  mutate_if(is.numeric, round, 3)
+  mutate_if(is.numeric, round, 2)
+
+#scaled outcome
+nm_scm_factor_bayes_lm_dur_scaled <- stan_glm(scale(thi_total) ~ scale(core_total) + nm_factor_score + scale(PTA_Better) + scale(tin_dur), data = nm_scm_tindur, seed = 12345)
+
+#tidy and round model
+tidy_nm_scm_factor_bayes_lm_dur_scaled <- tidy(nm_scm_factor_bayes_lm_dur_scaled) %>% 
+  mutate_if(is.numeric, round, 2)
+
+#tidy and round model
+tidy_nm_scm_factor_bayes_lm_dur <- tidy(nm_scm_factor_bayes_lm_dur) %>% 
+  mutate_if(is.numeric, round, 2)
 
 #draws from nm factor score model
 nm_scm_factor_posterior_draws_dur <- spread_draws(nm_scm_factor_bayes_lm_dur, nm_factor_score, seed = 123)
 
 nm_scm_factor_partial_beta_prob <- mean(nm_scm_factor_posterior_draws_dur$nm_factor_score < 0) %>% round(digits = 2)
 
+nm_fsr_bayes_dur <- rbind(tidy_nm_scm_factor_bayes_lm_dur_scaled, tidy_nm_scm_factor_bayes_lm_dur) %>% 
+  mutate(dataset = 2,
+          EF_less_than_0 = nm_scm_factor_partial_beta_prob)
+```
 
+```{r frequentist and bayes tables with tindur}
+bayes_all_fsr_table_dur <- rbind(efit_fsr_bayes_dur, nm_fsr_bayes_dur)
+
+frequentist_all_fsr_table_dur <- rbind(efit_fsr_frequentist_dur, nm_fsr_frequentist_dur)
+```
+
+###TINNITUS DURATION ON EF
+```{r tin dur on EF}
+#unscaled outcome
+nm_scm_factor_bayes_lm_durONLY <- stan_glm(nm_factor_score ~ tin_dur, data = nm_scm_tindur, seed = 12345)
+
+tidy_nm_scm_factor_bayes_lm_durONLY <- tidy(nm_scm_factor_bayes_lm_durONLY) %>% 
+  mutate_if(is.numeric, round, 2)
+
+#draws from nm factor score model
+nm_scm_factor_bayes_lm_durONLY <- spread_draws(nm_scm_factor_bayes_lm_durONLY, tin_dur, seed = 123)
+
+nm_scm_factor_partial_beta_prob_durONLY <- mean(nm_scm_factor_bayes_lm_durONLY$tin_dur < 0) %>% round(digits = 2)
+
+tidy_nm_scm_factor_bayes_lm_durONLY %>% 
+  mutate(dataset = 2,
+         dur_less_than_0 = nm_scm_factor_partial_beta_prob)
 ```
 
 ```{r prop}
